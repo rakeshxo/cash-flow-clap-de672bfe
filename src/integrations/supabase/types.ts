@@ -14,7 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      survey_completions: {
+        Row: {
+          answers: Json
+          completed_at: string
+          id: string
+          reward_cents: number
+          survey_id: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          reward_cents?: number
+          survey_id: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          reward_cents?: number
+          survey_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_completions_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surveys: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          estimated_minutes: number
+          id: string
+          questions: Json
+          reward_cents: number
+          title: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          estimated_minutes?: number
+          id?: string
+          questions?: Json
+          reward_cents?: number
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          estimated_minutes?: number
+          id?: string
+          questions?: Json
+          reward_cents?: number
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
