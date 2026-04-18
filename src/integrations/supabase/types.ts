@@ -14,24 +14,318 @@ export type Database = {
   }
   public: {
     Tables: {
-      profiles: {
+      coin_transactions: {
         Row: {
+          amount: number
           created_at: string
-          display_name: string | null
+          description: string
           id: string
+          reference_id: string | null
+          type: string
           user_id: string
         }
         Insert: {
+          amount: number
           created_at?: string
-          display_name?: string | null
+          description?: string
           id?: string
+          reference_id?: string | null
+          type: string
           user_id: string
         }
         Update: {
+          amount?: number
           created_at?: string
+          description?: string
+          id?: string
+          reference_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_polls: {
+        Row: {
+          created_at: string
+          id: string
+          options: Json
+          poll_date: string
+          question: string
+          reward_coins: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          options?: Json
+          poll_date: string
+          question: string
+          reward_coins?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          options?: Json
+          poll_date?: string
+          question?: string
+          reward_coins?: number
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          icon: string
+          id: string
+          read: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          read?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          read?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      offer_activations: {
+        Row: {
+          activated_at: string
+          id: string
+          offer_id: string
+          reward_coins: number
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string
+          id?: string
+          offer_id: string
+          reward_coins?: number
+          user_id: string
+        }
+        Update: {
+          activated_at?: string
+          id?: string
+          offer_id?: string
+          reward_coins?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_activations_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offers: {
+        Row: {
+          cashback_percent: number
+          category: string
+          created_at: string
+          description: string
+          id: string
+          logo_url: string | null
+          merchant: string
+          reward_coins: number
+          title: string
+        }
+        Insert: {
+          cashback_percent?: number
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          logo_url?: string | null
+          merchant: string
+          reward_coins?: number
+          title: string
+        }
+        Update: {
+          cashback_percent?: number
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          logo_url?: string | null
+          merchant?: string
+          reward_coins?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      poll_votes: {
+        Row: {
+          id: string
+          option_index: number
+          poll_id: string
+          user_id: string
+          voted_at: string
+        }
+        Insert: {
+          id?: string
+          option_index: number
+          poll_id: string
+          user_id: string
+          voted_at?: string
+        }
+        Update: {
+          id?: string
+          option_index?: number
+          poll_id?: string
+          user_id?: string
+          voted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "daily_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          daily_streak: number
+          display_name: string | null
+          id: string
+          last_active_date: string | null
+          referral_code: string | null
+          referred_by: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          daily_streak?: number
           display_name?: string | null
           id?: string
+          last_active_date?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          daily_streak?: number
+          display_name?: string | null
+          id?: string
+          last_active_date?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      redemptions: {
+        Row: {
+          cost_coins: number
+          id: string
+          redeemed_at: string
+          reward_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          cost_coins: number
+          id?: string
+          redeemed_at?: string
+          reward_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          cost_coins?: number
+          id?: string
+          redeemed_at?: string
+          reward_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          bonus_paid: boolean
+          created_at: string
+          id: string
+          referred_id: string
+          referrer_id: string
+        }
+        Insert: {
+          bonus_paid?: boolean
+          created_at?: string
+          id?: string
+          referred_id: string
+          referrer_id: string
+        }
+        Update: {
+          bonus_paid?: boolean
+          created_at?: string
+          id?: string
+          referred_id?: string
+          referrer_id?: string
+        }
+        Relationships: []
+      }
+      rewards: {
+        Row: {
+          brand: string
+          cash_value_cents: number
+          category: string
+          cost_coins: number
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+        }
+        Insert: {
+          brand?: string
+          cash_value_cents: number
+          category?: string
+          cost_coins: number
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+        }
+        Update: {
+          brand?: string
+          cash_value_cents?: number
+          category?: string
+          cost_coins?: number
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
         }
         Relationships: []
       }
@@ -103,9 +397,82 @@ export type Database = {
         }
         Relationships: []
       }
+      video_watches: {
+        Row: {
+          id: string
+          reward_coins: number
+          user_id: string
+          video_id: string
+          watched_at: string
+        }
+        Insert: {
+          id?: string
+          reward_coins?: number
+          user_id: string
+          video_id: string
+          watched_at?: string
+        }
+        Update: {
+          id?: string
+          reward_coins?: number
+          user_id?: string
+          video_id?: string
+          watched_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_watches_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          duration_seconds: number
+          id: string
+          reward_coins: number
+          thumbnail_url: string | null
+          title: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string
+          duration_seconds?: number
+          id?: string
+          reward_coins?: number
+          thumbnail_url?: string | null
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          duration_seconds?: number
+          id?: string
+          reward_coins?: number
+          thumbnail_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      weekly_leaderboard: {
+        Row: {
+          avatar_url: string | null
+          coins_earned: number | null
+          display_name: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
