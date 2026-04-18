@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, Coins, Clock, Sparkles } from "lucide-react";
+import { CheckCircle2, Coins, Clock, Sparkles, PlayCircle, ShoppingBag, Gift, Users, Trophy } from "lucide-react";
 
 const Index = () => {
   const [hasSession, setHasSession] = useState(false);
@@ -41,11 +41,11 @@ const Index = () => {
             Earn from your opinion
           </div>
           <h1 className="font-display text-5xl font-extrabold tracking-tight text-foreground md:text-6xl">
-            Get paid to take{" "}
-            <span className="bg-gradient-hero bg-clip-text text-transparent">quick surveys</span>
+            Earn coins. Redeem{" "}
+            <span className="bg-gradient-hero bg-clip-text text-transparent">real cash & gift cards.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-            Share your opinion in minutes, earn real cash rewards. No hassle, no spam — just simple surveys.
+            Take surveys, watch videos, shop, and refer friends. Every action earns coins you can swap for Amazon, PayPal, Visa & more.
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-8 text-base shadow-glow">
@@ -57,18 +57,21 @@ const Index = () => {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-5xl grid-cols-1 gap-6 pb-20 md:grid-cols-3">
+        <section className="mx-auto grid max-w-6xl grid-cols-2 gap-4 pb-20 md:grid-cols-3 lg:grid-cols-6">
           {[
-            { icon: CheckCircle2, title: "Easy login", text: "Sign up with email in seconds. No verification headaches." },
-            { icon: Clock, title: "Quick surveys", text: "Most take under 5 minutes. Do them on your break." },
-            { icon: Coins, title: "Real rewards", text: "Every completed survey adds cash to your balance." },
+            { icon: Sparkles, title: "Surveys", text: "Share opinions" },
+            { icon: PlayCircle, title: "Videos", text: "Watch & earn" },
+            { icon: ShoppingBag, title: "Cashback", text: "Shop & save" },
+            { icon: Gift, title: "Gift cards", text: "Amazon, Visa..." },
+            { icon: Users, title: "Referrals", text: "Invite friends" },
+            { icon: Trophy, title: "Leaderboard", text: "Compete weekly" },
           ].map((f) => (
-            <div key={f.title} className="rounded-2xl border border-border bg-card p-6 shadow-card transition hover:-translate-y-1 hover:shadow-glow">
-              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-secondary">
+            <div key={f.title} className="rounded-2xl border border-border bg-card p-5 text-center shadow-card transition hover:-translate-y-1 hover:shadow-glow">
+              <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-secondary">
                 <f.icon className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="font-display text-lg font-bold text-foreground">{f.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{f.text}</p>
+              <h3 className="font-display text-base font-bold text-foreground">{f.title}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{f.text}</p>
             </div>
           ))}
         </section>
