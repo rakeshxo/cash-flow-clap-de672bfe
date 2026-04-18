@@ -15,9 +15,11 @@ import {
   Bell,
   Menu,
   X,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const navItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
