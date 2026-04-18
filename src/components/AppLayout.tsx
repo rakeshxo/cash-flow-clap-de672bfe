@@ -15,9 +15,11 @@ import {
   Bell,
   Menu,
   X,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const navItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
@@ -31,9 +33,14 @@ const navItems = [
 
 export const AppLayout = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
   const [balance, setBalance] = useState(0);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
+
+  const items = isAdmin
+    ? [...navItems, { to: "/admin", label: "Admin", icon: Shield }]
+    : navItems;
 
   useEffect(() => {
     let active = true;
@@ -84,7 +91,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           </div>
 
           <nav className="hidden items-center gap-1 md:flex">
-            {navItems.map((n) => (
+            {items.map((n) => (
               <NavLink
                 key={n.to}
                 to={n.to}
@@ -154,7 +161,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
               </div>
             </div>
             <nav className="flex flex-col gap-1">
-              {navItems.map((n) => (
+              {items.map((n) => (
                 <NavLink
                   key={n.to}
                   to={n.to}
