@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Coins } from "lucide-react";
+import { awardCoins } from "@/lib/coins";
+
+const REFERRAL_BONUS = 250;
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [params] = useSearchParams();
+  const refCode = params.get("ref") ?? "";
+  const [mode, setMode] = useState<"signin" | "signup">(refCode ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,17 +29,47 @@ const Auth = () => {
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
+  const handleReferral = async (newUserId: string) => {
+    if (!refCode) return;
+    const { data: referrer } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("referral_code", refCode)
+      .maybeSingle();
+    if (!referrer || referrer.user_id === newUserId) return;
+    await supabase.from("profiles").update({ referred_by: referrer.user_id }).eq("user_id", newUserId);
+    await supabase.from("referrals").insert({
+      referrer_id: referrer.user_id,
+      referred_id: newUserId,
+      bonus_paid: true,
+    });
+    // Bonuses for both
+    await awardCoins({
+      userId: referrer.user_id,
+      amount: REFERRAL_BONUS,
+      type: "referral",
+      description: "Friend joined via your link",
+    });
+    await awardCoins({
+      userId: newUserId,
+      amount: 100,
+      type: "bonus",
+      description: "Welcome bonus from referral",
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${window.location.origin}/dashboard` },
         });
         if (error) throw error;
+        if (data.user) await handleReferral(data.user.id);
         toast.success("Account created! You're in.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -65,6 +100,12 @@ const Auth = () => {
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "signin" ? "Log in to keep earning." : "Start earning in under a minute."}
           </p>
+
+          {refCode && mode === "signup" && (
+            <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm">
+              🎁 Invited by a friend! You'll get <span className="font-bold text-primary">100 bonus coins</span> when you sign up.
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="space-y-2">

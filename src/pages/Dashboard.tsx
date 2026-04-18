@@ -1,137 +1,172 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Coins, Clock, LogOut, Wallet } from "lucide-react";
+import { Coins, Sparkles, PlayCircle, ShoppingBag, Gift, Flame, Target, Vote } from "lucide-react";
+import { awardCoins, coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { toast } from "sonner";
 
-type Survey = {
-  id: string;
-  title: string;
-  description: string;
-  reward_cents: number;
-  estimated_minutes: number;
-  category: string;
-};
-
-const formatCash = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+const DAILY_GOAL = 50;
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
-  const [balanceCents, setBalanceCents] = useState(0);
   const [name, setName] = useState("");
+  const [balance, setBalance] = useState(0);
+  const [todayCoins, setTodayCoins] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [poll, setPoll] = useState<any>(null);
+  const [pollVoted, setPollVoted] = useState(false);
+  const [surveyCount, setSurveyCount] = useState(0);
+  const [videoCount, setVideoCount] = useState(0);
+  const [offerCount, setOfferCount] = useState(0);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) {
-        navigate("/auth", { replace: true });
-        return;
-      }
-      const userId = data.session.user.id;
+    (async () => {
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess.session) return;
+      const uid = sess.session.user.id;
 
-      const [{ data: surveysData }, { data: completionsData }, { data: profile }] = await Promise.all([
-        supabase.from("surveys").select("id,title,description,reward_cents,estimated_minutes,category").order("created_at"),
-        supabase.from("survey_completions").select("survey_id,reward_cents").eq("user_id", userId),
-        supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
+      const today = new Date();
+      const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+
+      const [profileR, txR, todayR, pollR, surveysR, videosR, offersR] = await Promise.all([
+        supabase.from("profiles").select("display_name,daily_streak,last_active_date").eq("user_id", uid).maybeSingle(),
+        supabase.from("coin_transactions").select("amount").eq("user_id", uid),
+        supabase.from("coin_transactions").select("amount").eq("user_id", uid).gte("created_at", start),
+        supabase.from("daily_polls").select("*").eq("poll_date", today.toISOString().slice(0, 10)).maybeSingle(),
+        supabase.from("surveys").select("id"),
+        supabase.from("videos").select("id"),
+        supabase.from("offers").select("id"),
       ]);
 
-      setSurveys(surveysData ?? []);
-      const ids = new Set((completionsData ?? []).map((c) => c.survey_id));
-      setCompletedIds(ids);
-      setBalanceCents((completionsData ?? []).reduce((s, c) => s + (c.reward_cents ?? 0), 0));
-      setName(profile?.display_name ?? data.session.user.email?.split("@")[0] ?? "there");
-      setLoading(false);
-    });
-  }, [navigate]);
+      const profile = profileR.data;
+      const bal = (txR.data ?? []).reduce((s, r) => s + (r.amount ?? 0), 0);
+      const todayBal = (todayR.data ?? []).reduce((s, r) => s + (r.amount ?? 0), 0);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logged out");
-    navigate("/");
+      // Update streak if new day
+      if (profile && profile.last_active_date !== today.toISOString().slice(0, 10)) {
+        const yest = new Date(today);
+        yest.setDate(yest.getDate() - 1);
+        const isConsecutive = profile.last_active_date === yest.toISOString().slice(0, 10);
+        const newStreak = isConsecutive ? (profile.daily_streak ?? 0) + 1 : 1;
+        await supabase.from("profiles").update({
+          daily_streak: newStreak,
+          last_active_date: today.toISOString().slice(0, 10),
+        }).eq("user_id", uid);
+        // Streak bonus
+        if (newStreak > 1) {
+          await awardCoins({
+            userId: uid,
+            amount: Math.min(newStreak * 2, 20),
+            type: "streak",
+            description: `${newStreak}-day login streak bonus`,
+          });
+          toast.success(`🔥 ${newStreak}-day streak! +${Math.min(newStreak * 2, 20)} coins`);
+        }
+        setStreak(newStreak);
+      } else {
+        setStreak(profile?.daily_streak ?? 0);
+      }
+
+      setName(profile?.display_name ?? sess.session.user.email?.split("@")[0] ?? "there");
+      setBalance(await getBalance(uid));
+      setTodayCoins(todayBal);
+      setPoll(pollR.data);
+      setSurveyCount(surveysR.data?.length ?? 0);
+      setVideoCount(videosR.data?.length ?? 0);
+      setOfferCount(offersR.data?.length ?? 0);
+
+      if (pollR.data) {
+        const v = await supabase.from("poll_votes").select("id").eq("user_id", uid).eq("poll_id", pollR.data.id).maybeSingle();
+        setPollVoted(!!v.data);
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  const votePoll = async (idx: number) => {
+    const { data: sess } = await supabase.auth.getSession();
+    if (!sess.session || !poll) return;
+    const uid = sess.session.user.id;
+    const { error } = await supabase.from("poll_votes").insert({
+      user_id: uid, poll_id: poll.id, option_index: idx,
+    });
+    if (error) return toast.error("Already voted today");
+    await awardCoins({ userId: uid, amount: poll.reward_coins, type: "poll", description: "Daily poll" });
+    setPollVoted(true);
+    setBalance((b) => b + poll.reward_coins);
+    setTodayCoins((c) => c + poll.reward_coins);
+    toast.success(`+${poll.reward_coins} coins`);
   };
 
-  if (loading) {
-    return <div className="flex min-h-screen items-center justify-center bg-gradient-soft text-muted-foreground">Loading...</div>;
-  }
+  if (loading) return <AppLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;
 
-  const available = surveys.filter((s) => !completedIds.has(s.id));
-  const done = surveys.filter((s) => completedIds.has(s.id));
+  const goalPct = Math.min(100, Math.round((todayCoins / DAILY_GOAL) * 100));
 
   return (
-    <div className="min-h-screen bg-gradient-soft font-sans">
-      <header className="border-b border-border bg-card/60 backdrop-blur">
-        <div className="container mx-auto flex items-center justify-between py-4">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-hero shadow-glow">
-              <Coins className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="font-display text-xl font-bold text-foreground">PollPay</span>
-          </Link>
-          <Button variant="ghost" onClick={signOut}>
-            <LogOut className="mr-2 h-4 w-4" /> Log out
-          </Button>
-        </div>
-      </header>
+    <AppLayout>
+      <div className="mb-8 flex flex-col gap-2">
+        <p className="text-sm text-muted-foreground">Welcome back,</p>
+        <h1 className="font-display text-3xl font-bold capitalize text-foreground">{name}</h1>
+      </div>
 
-      <main className="container mx-auto px-4 py-10">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Welcome back,</p>
-            <h1 className="font-display text-3xl font-bold text-foreground capitalize">{name}</h1>
-          </div>
-          <div className="flex items-center gap-3 rounded-2xl bg-gradient-hero px-6 py-4 text-primary-foreground shadow-glow">
-            <Wallet className="h-6 w-6" />
-            <div>
-              <p className="text-xs opacity-90">Your balance</p>
-              <p className="font-display text-2xl font-bold">{formatCash(balanceCents)}</p>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="rounded-2xl bg-gradient-hero p-6 text-primary-foreground shadow-glow">
+          <div className="mb-2 flex items-center gap-2 opacity-90"><Coins className="h-4 w-4" /> Total balance</div>
+          <p className="font-display text-3xl font-bold">{formatCoins(balance)}</p>
+          <p className="text-sm opacity-90">{coinsToCash(balance)}</p>
         </div>
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+          <div className="mb-2 flex items-center gap-2 text-muted-foreground"><Target className="h-4 w-4" /> Daily goal</div>
+          <p className="font-display text-2xl font-bold text-foreground">{todayCoins} <span className="text-base text-muted-foreground">/ {DAILY_GOAL}</span></p>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
+            <div className="h-full bg-gradient-hero transition-all" style={{ width: `${goalPct}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">{goalPct === 100 ? "Goal reached! 🎉" : `${DAILY_GOAL - todayCoins} coins to go`}</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+          <div className="mb-2 flex items-center gap-2 text-muted-foreground"><Flame className="h-4 w-4 text-accent" /> Login streak</div>
+          <p className="font-display text-3xl font-bold text-foreground">{streak} <span className="text-base text-muted-foreground">days</span></p>
+          <p className="mt-2 text-xs text-muted-foreground">Come back daily to keep it growing.</p>
+        </div>
+      </div>
 
-        <h2 className="font-display mb-4 text-xl font-bold text-foreground">Available surveys</h2>
-        {available.length === 0 ? (
-          <p className="rounded-xl border border-border bg-card p-6 text-muted-foreground">
-            You completed everything! Check back soon for new surveys.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {available.map((s) => (
-              <article key={s.id} className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-card transition hover:-translate-y-1 hover:shadow-glow">
-                <span className="mb-3 w-fit rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">{s.category}</span>
-                <h3 className="font-display text-lg font-bold text-foreground">{s.title}</h3>
-                <p className="mt-1 flex-1 text-sm text-muted-foreground">{s.description}</p>
-                <div className="mt-4 flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1 text-muted-foreground"><Clock className="h-4 w-4" /> {s.estimated_minutes} min</span>
-                  <span className="font-display font-bold text-primary">{formatCash(s.reward_cents)}</span>
-                </div>
-                <Button asChild className="mt-4 w-full"><Link to={`/survey/${s.id}`}>Take survey</Link></Button>
-              </article>
+      {poll && (
+        <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
+          <div className="mb-2 flex items-center gap-2 text-muted-foreground"><Vote className="h-4 w-4" /> Daily poll · +{poll.reward_coins} coins</div>
+          <h2 className="font-display text-xl font-bold text-foreground">{poll.question}</h2>
+          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {(poll.options as string[]).map((opt, i) => (
+              <Button key={i} variant={pollVoted ? "secondary" : "outline"} disabled={pollVoted} onClick={() => votePoll(i)} className="justify-start">
+                {opt}
+              </Button>
             ))}
           </div>
-        )}
+          {pollVoted && <p className="mt-3 text-sm text-primary">Thanks for voting! Come back tomorrow.</p>}
+        </section>
+      )}
 
-        {done.length > 0 && (
-          <>
-            <h2 className="font-display mb-4 mt-12 text-xl font-bold text-foreground">Completed</h2>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {done.map((s) => (
-                <div key={s.id} className="flex items-center justify-between rounded-xl border border-border bg-card/60 p-4">
-                  <div>
-                    <p className="font-medium text-foreground">{s.title}</p>
-                    <p className="text-xs text-muted-foreground">{s.category}</p>
-                  </div>
-                  <span className="font-display font-bold text-primary">+{formatCash(s.reward_cents)}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </main>
-    </div>
+      <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Ways to earn</h2>
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <EarnCard to="/earn" icon={Sparkles} title="Surveys" count={surveyCount} hint="Share your opinion" />
+        <EarnCard to="/videos" icon={PlayCircle} title="Videos" count={videoCount} hint="Watch & earn" />
+        <EarnCard to="/shop" icon={ShoppingBag} title="Cashback shop" count={offerCount} hint="Activate offers" />
+        <EarnCard to="/rewards" icon={Gift} title="Redeem" count={null} hint="Spend coins on gift cards" />
+      </div>
+    </AppLayout>
   );
 };
+
+const EarnCard = ({ to, icon: Icon, title, count, hint }: any) => (
+  <Link to={to} className="group flex flex-col rounded-2xl border border-border bg-card p-5 shadow-card transition hover:-translate-y-1 hover:shadow-glow">
+    <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-secondary group-hover:bg-gradient-hero">
+      <Icon className="h-5 w-5 text-primary group-hover:text-primary-foreground" />
+    </div>
+    <h3 className="font-display text-lg font-bold text-foreground">{title}</h3>
+    <p className="text-sm text-muted-foreground">{hint}</p>
+    {count !== null && <p className="mt-2 text-xs font-semibold text-primary">{count} available</p>}
+  </Link>
+);
 
 export default Dashboard;

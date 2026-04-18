@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Coins, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { awardCoins } from "@/lib/coins";
 
 type Question = { q: string; options: string[] };
 type Survey = {
@@ -56,13 +57,21 @@ const SurveyDetail = () => {
       answers,
       reward_cents: survey.reward_cents,
     });
-    setSubmitting(false);
     if (error) {
+      setSubmitting(false);
       toast.error(error.message);
       return;
     }
+    await awardCoins({
+      userId,
+      amount: survey.reward_cents,
+      type: "survey",
+      description: `Completed: ${survey.title}`,
+      referenceId: survey.id,
+    });
+    setSubmitting(false);
     setDone(true);
-    toast.success(`+$${(survey.reward_cents / 100).toFixed(2)} earned!`);
+    toast.success(`+${survey.reward_cents} coins earned!`);
   };
 
   if (!survey) {
@@ -78,7 +87,7 @@ const SurveyDetail = () => {
           </div>
           <h1 className="font-display text-2xl font-bold text-foreground">Nice work!</h1>
           <p className="mt-2 text-muted-foreground">
-            You earned <span className="font-bold text-primary">${(survey.reward_cents / 100).toFixed(2)}</span> for this survey.
+            You earned <span className="font-bold text-primary">+{survey.reward_cents} coins</span> for this survey.
           </p>
           <Button asChild className="mt-6 w-full"><Link to="/dashboard">Back to dashboard</Link></Button>
         </div>
@@ -95,8 +104,7 @@ const SurveyDetail = () => {
           </Link>
           <div className="flex items-center gap-2 text-sm">
             <Coins className="h-4 w-4 text-primary" />
-            <span className="font-display font-bold text-primary">${(survey.reward_cents / 100).toFixed(2)}</span>
-            <span className="text-muted-foreground">reward</span>
+            <span className="font-display font-bold text-primary">+{survey.reward_cents} coins</span>
           </div>
         </div>
       </header>
@@ -136,7 +144,7 @@ const SurveyDetail = () => {
         </div>
 
         <Button onClick={submit} disabled={submitting} className="mt-8 h-12 w-full text-base shadow-glow">
-          {submitting ? "Submitting..." : `Submit & earn $${(survey.reward_cents / 100).toFixed(2)}`}
+          {submitting ? "Submitting..." : `Submit & earn ${survey.reward_cents} coins`}
         </Button>
       </main>
     </div>
