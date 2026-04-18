@@ -91,7 +91,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           </div>
 
           <nav className="hidden items-center gap-1 md:flex">
-            {navItems.map((n) => (
+            {items.map((n) => (
               <NavLink
                 key={n.to}
                 to={n.to}
@@ -161,7 +161,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
               </div>
             </div>
             <nav className="flex flex-col gap-1">
-              {navItems.map((n) => (
+              {items.map((n) => (
                 <NavLink
                   key={n.to}
                   to={n.to}
