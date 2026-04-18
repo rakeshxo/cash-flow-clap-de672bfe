@@ -33,9 +33,14 @@ const navItems = [
 
 export const AppLayout = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
   const [balance, setBalance] = useState(0);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
+
+  const items = isAdmin
+    ? [...navItems, { to: "/admin", label: "Admin", icon: Shield }]
+    : navItems;
 
   useEffect(() => {
     let active = true;
