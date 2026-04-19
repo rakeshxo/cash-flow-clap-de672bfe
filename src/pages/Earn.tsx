@@ -15,7 +15,7 @@ const Earn = () => {
       const { data: sess } = await supabase.auth.getSession();
       if (!sess.session) return;
       const [s, c] = await Promise.all([
-        supabase.from("surveys").select("*").order("created_at"),
+        supabase.from("surveys").select("*").not("created_by", "is", null).order("created_at"),
         supabase.from("survey_completions").select("survey_id").eq("user_id", sess.session.user.id),
       ]);
       setSurveys(s.data ?? []);
