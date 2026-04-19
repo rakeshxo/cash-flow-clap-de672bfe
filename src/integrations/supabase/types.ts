@@ -495,6 +495,42 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawals: {
+        Row: {
+          cash_value_cents: number
+          coins_amount: number
+          created_at: string
+          destination: string
+          id: string
+          method: string
+          processed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          cash_value_cents: number
+          coins_amount: number
+          created_at?: string
+          destination: string
+          id?: string
+          method: string
+          processed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          cash_value_cents?: number
+          coins_amount?: number
+          created_at?: string
+          destination?: string
+          id?: string
+          method?: string
+          processed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       weekly_leaderboard: {
