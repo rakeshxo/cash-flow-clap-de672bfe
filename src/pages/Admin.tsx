@@ -334,6 +334,102 @@ const RedemptionsAdmin = () => {
   );
 };
 
+/* ---------- Users ---------- */
+const UsersAdmin = () => {
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    const [{ data: profiles }, { data: roles }, { data: txs }] = await Promise.all([
+      supabase.from("profiles").select("user_id, display_name, avatar_url, created_at, daily_streak"),
+      supabase.from("user_roles").select("user_id, role"),
+      supabase.from("coin_transactions").select("user_id, amount"),
+    ]);
+    const adminSet = new Set((roles ?? []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id));
+    const balances = new Map<string, number>();
+    (txs ?? []).forEach((t: any) => balances.set(t.user_id, (balances.get(t.user_id) ?? 0) + t.amount));
+    const merged = (profiles ?? []).map((p: any) => ({
+      ...p,
+      balance: balances.get(p.user_id) ?? 0,
+      isAdmin: adminSet.has(p.user_id),
+    })).sort((a, b) => b.balance - a.balance);
+    setRows(merged);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const grant = async (user_id: string) => {
+    const { error } = await supabase.from("user_roles").insert({ user_id, role: "admin" });
+    if (error) return toast.error(error.message);
+    toast.success("Admin granted");
+    load();
+  };
+  const revoke = async (user_id: string) => {
+    if (!confirm("Revoke admin access?")) return;
+    const { error } = await supabase.from("user_roles").delete().eq("user_id", user_id).eq("role", "admin");
+    if (error) return toast.error(error.message);
+    toast.success("Admin revoked");
+    load();
+  };
+
+  const filtered = rows.filter((r) =>
+    !filter ||
+    (r.display_name ?? "").toLowerCase().includes(filter.toLowerCase()) ||
+    r.user_id.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <Input placeholder="Search by name or user ID..." value={filter} onChange={(e) => setFilter(e.target.value)} className="max-w-sm" />
+        <p className="text-sm text-muted-foreground">{filtered.length} of {rows.length} users</p>
+      </div>
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        {loading ? (
+          <p className="p-8 text-center text-muted-foreground">Loading users...</p>
+        ) : filtered.length === 0 ? (
+          <p className="p-8 text-center text-muted-foreground">No users found.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {filtered.map((u) => (
+              <div key={u.user_id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate font-medium text-foreground">{u.display_name ?? "Unnamed"}</p>
+                    {u.isAdmin && (
+                      <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Admin</span>
+                    )}
+                  </div>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {u.user_id.slice(0, 8)} · joined {new Date(u.created_at).toLocaleDateString()} · streak {u.daily_streak}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className="font-display text-lg font-bold text-foreground">{u.balance.toLocaleString()}</p>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">coins · ${(u.balance / 100).toFixed(2)}</p>
+                  </div>
+                  {u.isAdmin ? (
+                    <Button size="sm" variant="outline" onClick={() => revoke(u.user_id)}>
+                      <X className="mr-1 h-3.5 w-3.5" /> Revoke admin
+                    </Button>
+                  ) : (
+                    <Button size="sm" onClick={() => grant(u.user_id)}>
+                      <Shield className="mr-1 h-3.5 w-3.5" /> Make admin
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /* ---------- Shared UI ---------- */
 const FormCard = ({ title, children, onReset }: any) => (
   <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
