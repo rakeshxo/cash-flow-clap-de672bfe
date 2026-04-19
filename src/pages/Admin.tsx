@@ -44,6 +44,7 @@ const Admin = () => {
           <TabsTrigger value="videos">Videos</TabsTrigger>
           <TabsTrigger value="offers">Offers</TabsTrigger>
           <TabsTrigger value="rewards">Rewards</TabsTrigger>
+          <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
           <TabsTrigger value="redemptions">Redemptions</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
@@ -51,6 +52,7 @@ const Admin = () => {
         <TabsContent value="videos"><VideosAdmin /></TabsContent>
         <TabsContent value="offers"><OffersAdmin /></TabsContent>
         <TabsContent value="rewards"><RewardsAdmin /></TabsContent>
+        <TabsContent value="withdrawals"><WithdrawalsAdmin /></TabsContent>
         <TabsContent value="redemptions"><RedemptionsAdmin /></TabsContent>
         <TabsContent value="users"><UsersAdmin /></TabsContent>
       </Tabs>
@@ -328,6 +330,45 @@ const RedemptionsAdmin = () => {
             <span className="rounded-full bg-secondary px-2 py-0.5 text-xs capitalize text-secondary-foreground">{r.status}</span>
             {r.status !== "fulfilled" && <Button size="sm" onClick={() => setStatus(r.id, "fulfilled")}><Check className="mr-1 h-3.5 w-3.5" /> Fulfill</Button>}
             {r.status !== "rejected" && <Button size="sm" variant="outline" onClick={() => setStatus(r.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Reject</Button>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ---------- Withdrawals ---------- */
+const WithdrawalsAdmin = () => {
+  const [items, setItems] = useState<any[]>([]);
+  const load = async () => {
+    const { data } = await supabase
+      .from("withdrawals")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setItems(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+  const setStatus = async (id: string, status: string) => {
+    const { error } = await supabase
+      .from("withdrawals")
+      .update({ status, processed_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success(`Marked ${status}`);
+    load();
+  };
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      {items.length === 0 ? <p className="p-8 text-center text-muted-foreground">No withdrawals yet.</p> : items.map((w) => (
+        <div key={w.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4 last:border-0">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-foreground capitalize">{w.method} → {w.destination}</p>
+            <p className="text-xs text-muted-foreground">User {w.user_id.slice(0, 8)} · {new Date(w.created_at).toLocaleString()} · {w.coins_amount} coins (${(w.cash_value_cents / 100).toFixed(2)})</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs capitalize text-secondary-foreground">{w.status}</span>
+            {w.status !== "paid" && <Button size="sm" onClick={() => setStatus(w.id, "paid")}><Check className="mr-1 h-3.5 w-3.5" /> Mark paid</Button>}
+            {w.status !== "rejected" && <Button size="sm" variant="outline" onClick={() => setStatus(w.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Reject</Button>}
           </div>
         </div>
       ))}
