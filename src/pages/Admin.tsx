@@ -45,12 +45,14 @@ const Admin = () => {
           <TabsTrigger value="offers">Offers</TabsTrigger>
           <TabsTrigger value="rewards">Rewards</TabsTrigger>
           <TabsTrigger value="redemptions">Redemptions</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
         <TabsContent value="surveys"><SurveysAdmin /></TabsContent>
         <TabsContent value="videos"><VideosAdmin /></TabsContent>
         <TabsContent value="offers"><OffersAdmin /></TabsContent>
         <TabsContent value="rewards"><RewardsAdmin /></TabsContent>
         <TabsContent value="redemptions"><RedemptionsAdmin /></TabsContent>
+        <TabsContent value="users"><UsersAdmin /></TabsContent>
       </Tabs>
     </AppLayout>
   );
