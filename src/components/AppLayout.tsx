@@ -7,10 +7,7 @@ import {
   LogOut,
   LayoutDashboard,
   Sparkles,
-  ShoppingBag,
-  Gift,
-  Trophy,
-  Users,
+  Wallet,
   User as UserIcon,
   Bell,
   Menu,
@@ -24,10 +21,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 const navItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
   { to: "/earn", label: "Earn", icon: Sparkles },
-  { to: "/shop", label: "Shop", icon: ShoppingBag },
-  { to: "/rewards", label: "Rewards", icon: Gift },
-  { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  { to: "/referrals", label: "Refer", icon: Users },
+  { to: "/withdraw", label: "Withdraw", icon: Wallet },
   { to: "/profile", label: "Profile", icon: UserIcon },
 ];
 

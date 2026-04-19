@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, Coins, Clock, Sparkles, PlayCircle, ShoppingBag, Gift, Users, Trophy } from "lucide-react";
+import { Coins, Sparkles, PlayCircle, Wallet, Vote, Flame } from "lucide-react";
 
 const Index = () => {
   const [hasSession, setHasSession] = useState(false);
@@ -41,11 +41,11 @@ const Index = () => {
             Earn from your opinion
           </div>
           <h1 className="font-display text-5xl font-extrabold tracking-tight text-foreground md:text-6xl">
-            Earn coins. Redeem{" "}
-            <span className="bg-gradient-hero bg-clip-text text-transparent">real cash & gift cards.</span>
+            Earn coins.{" "}
+            <span className="bg-gradient-hero bg-clip-text text-transparent">Withdraw real cash.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-            Take surveys, watch videos, shop, and refer friends. Every action earns coins you can swap for Amazon, PayPal, Visa & more.
+            Take surveys and watch videos to earn coins. Cash out directly to PayPal, bank, or crypto once you hit 500 coins.
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-8 text-base shadow-glow">
@@ -57,14 +57,12 @@ const Index = () => {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-6xl grid-cols-2 gap-4 pb-20 md:grid-cols-3 lg:grid-cols-6">
+        <section className="mx-auto grid max-w-5xl grid-cols-2 gap-4 pb-20 md:grid-cols-4">
           {[
             { icon: Sparkles, title: "Surveys", text: "Share opinions" },
             { icon: PlayCircle, title: "Videos", text: "Watch & earn" },
-            { icon: ShoppingBag, title: "Cashback", text: "Shop & save" },
-            { icon: Gift, title: "Gift cards", text: "Amazon, Visa..." },
-            { icon: Users, title: "Referrals", text: "Invite friends" },
-            { icon: Trophy, title: "Leaderboard", text: "Compete weekly" },
+            { icon: Vote, title: "Daily polls", text: "Quick coins daily" },
+            { icon: Wallet, title: "Cash out", text: "From 500 coins" },
           ].map((f) => (
             <div key={f.title} className="rounded-2xl border border-border bg-card p-5 text-center shadow-card transition hover:-translate-y-1 hover:shadow-glow">
               <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-secondary">
