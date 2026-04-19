@@ -8,7 +8,7 @@ export function useIsAdmin() {
   useEffect(() => {
     let active = true;
 
-    const checkUser = async (userId: string | null) => {
+    const check = async (userId: string | null) => {
       if (!userId) {
         if (active) {
           setIsAdmin(false);
@@ -28,12 +28,10 @@ export function useIsAdmin() {
       }
     };
 
+    // Single source of truth — onAuthStateChange always fires once on subscribe
+    // with the current session (or null), so we don't need a separate getSession.
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      checkUser(session?.user?.id ?? null);
-    });
-
-    supabase.auth.getSession().then(({ data }) => {
-      checkUser(data.session?.user?.id ?? null);
+      check(session?.user?.id ?? null);
     });
 
     return () => {
