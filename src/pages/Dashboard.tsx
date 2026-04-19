@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Coins, Sparkles, PlayCircle, ShoppingBag, Gift, Flame, Target, Vote } from "lucide-react";
+import { Coins, Sparkles, PlayCircle, Wallet, Flame, Target, Vote } from "lucide-react";
 import { awardCoins, coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { toast } from "sonner";
 
@@ -19,7 +19,6 @@ const Dashboard = () => {
   const [pollVoted, setPollVoted] = useState(false);
   const [surveyCount, setSurveyCount] = useState(0);
   const [videoCount, setVideoCount] = useState(0);
-  const [offerCount, setOfferCount] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -30,14 +29,13 @@ const Dashboard = () => {
       const today = new Date();
       const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
 
-      const [profileR, txR, todayR, pollR, surveysR, videosR, offersR] = await Promise.all([
+      const [profileR, txR, todayR, pollR, surveysR, videosR] = await Promise.all([
         supabase.from("profiles").select("display_name,daily_streak,last_active_date").eq("user_id", uid).maybeSingle(),
         supabase.from("coin_transactions").select("amount").eq("user_id", uid),
         supabase.from("coin_transactions").select("amount").eq("user_id", uid).gte("created_at", start),
         supabase.from("daily_polls").select("*").eq("poll_date", today.toISOString().slice(0, 10)).maybeSingle(),
-        supabase.from("surveys").select("id"),
+        supabase.from("surveys").select("id").not("created_by", "is", null),
         supabase.from("videos").select("id"),
-        supabase.from("offers").select("id"),
       ]);
 
       const profile = profileR.data;
@@ -75,7 +73,6 @@ const Dashboard = () => {
       setPoll(pollR.data);
       setSurveyCount(surveysR.data?.length ?? 0);
       setVideoCount(videosR.data?.length ?? 0);
-      setOfferCount(offersR.data?.length ?? 0);
 
       if (pollR.data) {
         const v = await supabase.from("poll_votes").select("id").eq("user_id", uid).eq("poll_id", pollR.data.id).maybeSingle();
@@ -148,11 +145,10 @@ const Dashboard = () => {
       )}
 
       <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Ways to earn</h2>
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
         <EarnCard to="/earn" icon={Sparkles} title="Surveys" count={surveyCount} hint="Share your opinion" />
         <EarnCard to="/videos" icon={PlayCircle} title="Videos" count={videoCount} hint="Watch & earn" />
-        <EarnCard to="/shop" icon={ShoppingBag} title="Cashback shop" count={offerCount} hint="Activate offers" />
-        <EarnCard to="/rewards" icon={Gift} title="Redeem" count={null} hint="Spend coins on gift cards" />
+        <EarnCard to="/withdraw" icon={Wallet} title="Withdraw" count={null} hint="Cash out at 500 coins" />
       </div>
     </AppLayout>
   );

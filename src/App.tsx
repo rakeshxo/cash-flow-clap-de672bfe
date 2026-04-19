@@ -9,10 +9,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import SurveyDetail from "./pages/SurveyDetail.tsx";
 import Earn from "./pages/Earn.tsx";
 import Videos from "./pages/Videos.tsx";
-import Shop from "./pages/Shop.tsx";
-import Rewards from "./pages/Rewards.tsx";
-import Leaderboard from "./pages/Leaderboard.tsx";
-import Referrals from "./pages/Referrals.tsx";
+import Withdraw from "./pages/Withdraw.tsx";
 import Profile from "./pages/Profile.tsx";
 import Activity from "./pages/Activity.tsx";
 import Admin from "./pages/Admin.tsx";
@@ -32,10 +29,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/earn" element={<Earn />} />
           <Route path="/videos" element={<Videos />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/rewards" element={<Rewards />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/referrals" element={<Referrals />} />
+          <Route path="/withdraw" element={<Withdraw />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/activity" element={<Activity />} />
           <Route path="/admin" element={<Admin />} />
