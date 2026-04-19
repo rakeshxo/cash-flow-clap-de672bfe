@@ -138,6 +138,7 @@ export type Database = {
           cashback_percent: number
           category: string
           created_at: string
+          created_by: string | null
           description: string
           id: string
           logo_url: string | null
@@ -149,6 +150,7 @@ export type Database = {
           cashback_percent?: number
           category?: string
           created_at?: string
+          created_by?: string | null
           description?: string
           id?: string
           logo_url?: string | null
@@ -160,6 +162,7 @@ export type Database = {
           cashback_percent?: number
           category?: string
           created_at?: string
+          created_by?: string | null
           description?: string
           id?: string
           logo_url?: string | null
@@ -303,6 +306,7 @@ export type Database = {
           category: string
           cost_coins: number
           created_at: string
+          created_by: string | null
           id: string
           image_url: string | null
           name: string
@@ -313,6 +317,7 @@ export type Database = {
           category?: string
           cost_coins: number
           created_at?: string
+          created_by?: string | null
           id?: string
           image_url?: string | null
           name: string
@@ -323,6 +328,7 @@ export type Database = {
           category?: string
           cost_coins?: number
           created_at?: string
+          created_by?: string | null
           id?: string
           image_url?: string | null
           name?: string
@@ -368,6 +374,7 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          created_by: string | null
           description: string
           estimated_minutes: number
           id: string
@@ -378,6 +385,7 @@ export type Database = {
         Insert: {
           category?: string
           created_at?: string
+          created_by?: string | null
           description: string
           estimated_minutes?: number
           id?: string
@@ -388,6 +396,7 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
+          created_by?: string | null
           description?: string
           estimated_minutes?: number
           id?: string
@@ -454,6 +463,7 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          created_by: string | null
           description: string
           duration_seconds: number
           id: string
@@ -464,6 +474,7 @@ export type Database = {
         Insert: {
           category?: string
           created_at?: string
+          created_by?: string | null
           description?: string
           duration_seconds?: number
           id?: string
@@ -474,6 +485,7 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
+          created_by?: string | null
           description?: string
           duration_seconds?: number
           id?: string
