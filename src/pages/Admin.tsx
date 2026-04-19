@@ -82,7 +82,8 @@ const SurveysAdmin = () => {
       setSaving(false);
       return toast.error("Fill all fields including question options");
     }
-    const payload = { ...form, reward_cents: Number(form.reward_cents), estimated_minutes: Number(form.estimated_minutes) };
+    const { data: sess } = await supabase.auth.getSession();
+    const payload = { ...form, reward_cents: Number(form.reward_cents), estimated_minutes: Number(form.estimated_minutes), created_by: sess.session?.user.id ?? null };
     const { error } = editId
       ? await supabase.from("surveys").update(payload).eq("id", editId)
       : await supabase.from("surveys").insert(payload);
