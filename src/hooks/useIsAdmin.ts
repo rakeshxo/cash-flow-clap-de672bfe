@@ -7,23 +7,37 @@ export function useIsAdmin() {
 
   useEffect(() => {
     let active = true;
-    const check = async () => {
-      const { data: sess } = await supabase.auth.getSession();
-      if (!sess.session) {
-        if (active) { setIsAdmin(false); setLoading(false); }
+
+    const check = async (userId: string | null) => {
+      if (!userId) {
+        if (active) {
+          setIsAdmin(false);
+          setLoading(false);
+        }
         return;
       }
       const { data } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", sess.session.user.id)
+        .eq("user_id", userId)
         .eq("role", "admin")
         .maybeSingle();
-      if (active) { setIsAdmin(!!data); setLoading(false); }
+      if (active) {
+        setIsAdmin(!!data);
+        setLoading(false);
+      }
     };
-    check();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => check());
-    return () => { active = false; sub.subscription.unsubscribe(); };
+
+    // Single source of truth — onAuthStateChange always fires once on subscribe
+    // with the current session (or null), so we don't need a separate getSession.
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      check(session?.user?.id ?? null);
+    });
+
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   return { isAdmin, loading };
