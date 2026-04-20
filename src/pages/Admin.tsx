@@ -41,6 +41,7 @@ const Admin = () => {
       <Tabs defaultValue="surveys">
         <TabsList className="mb-6 flex w-full flex-wrap">
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
+          <TabsTrigger value="claims">Survey claims</TabsTrigger>
           <TabsTrigger value="videos">Videos</TabsTrigger>
           <TabsTrigger value="offers">Offers</TabsTrigger>
           <TabsTrigger value="rewards">Rewards</TabsTrigger>
@@ -49,6 +50,7 @@ const Admin = () => {
           <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
         <TabsContent value="surveys"><SurveysAdmin /></TabsContent>
+        <TabsContent value="claims"><SurveyClaimsAdmin /></TabsContent>
         <TabsContent value="videos"><VideosAdmin /></TabsContent>
         <TabsContent value="offers"><OffersAdmin /></TabsContent>
         <TabsContent value="rewards"><RewardsAdmin /></TabsContent>
