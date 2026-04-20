@@ -152,6 +152,18 @@ const SurveysAdmin = () => {
     qs[qi].options[oi] = val;
     setForm({ ...form, questions: qs });
   };
+  const setSQ = (i: number, patch: any) => {
+    const qs = [...form.screener_questions];
+    qs[i] = { ...qs[i], ...patch };
+    setForm({ ...form, screener_questions: qs });
+  };
+  const setSOpt = (qi: number, oi: number, val: string) => {
+    const qs = [...form.screener_questions];
+    qs[qi].options[oi] = val;
+    setForm({ ...form, screener_questions: qs });
+  };
+
+  const hasExternal = !!form.external_url?.trim();
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -164,48 +176,118 @@ const SurveysAdmin = () => {
           <Field label="Minutes"><Input type="number" value={form.estimated_minutes} onChange={(e) => setForm({ ...form, estimated_minutes: e.target.value })} /></Field>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label>Questions</Label>
-            <Button size="sm" variant="outline" onClick={() => setForm({ ...form, questions: [...form.questions, { q: "", options: ["", ""] }] })}>
-              <Plus className="mr-1 h-3.5 w-3.5" /> Add question
-            </Button>
-          </div>
-          {form.questions.map((q: any, qi: number) => (
-            <div key={qi} className="rounded-xl border border-border p-3">
-              <div className="mb-2 flex gap-2">
-                <Input placeholder={`Question ${qi + 1}`} value={q.q} onChange={(e) => setQ(qi, { q: e.target.value })} />
-                {form.questions.length > 1 && (
-                  <Button size="icon" variant="ghost" onClick={() => setForm({ ...form, questions: form.questions.filter((_: any, x: number) => x !== qi) })}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="space-y-2">
-                {q.options.map((opt: string, oi: number) => (
-                  <div key={oi} className="flex gap-2">
-                    <Input placeholder={`Option ${oi + 1}`} value={opt} onChange={(e) => setOpt(qi, oi, e.target.value)} />
-                    {q.options.length > 2 && (
-                      <Button size="icon" variant="ghost" onClick={() => setQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi) })}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button size="sm" variant="ghost" onClick={() => setQ(qi, { options: [...q.options, ""] })}>
-                  <Plus className="mr-1 h-3.5 w-3.5" /> Option
-                </Button>
-              </div>
+        <Field label="External survey link (optional — enables screener mode)">
+          <Input
+            value={form.external_url ?? ""}
+            onChange={(e) => setForm({ ...form, external_url: e.target.value })}
+            placeholder="https://your-survey-provider.com/..."
+          />
+        </Field>
+        <p className="-mt-2 text-xs text-muted-foreground">
+          {hasExternal
+            ? "Screener mode: users must answer 2–5 screener questions correctly to unlock the link. Coins are awarded after admin approval."
+            : "In-app mode: users answer the questions below to earn coins instantly."}
+        </p>
+
+        {hasExternal ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Screener questions (2–5, mark correct answer)</Label>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={(form.screener_questions?.length ?? 0) >= 5}
+                onClick={() => setForm({ ...form, screener_questions: [...form.screener_questions, { q: "", options: ["", ""], correct: 0 }] })}
+              >
+                <Plus className="mr-1 h-3.5 w-3.5" /> Add question
+              </Button>
             </div>
-          ))}
-        </div>
+            {form.screener_questions.map((q: any, qi: number) => (
+              <div key={qi} className="rounded-xl border border-border p-3">
+                <div className="mb-2 flex gap-2">
+                  <Input placeholder={`Screener ${qi + 1}`} value={q.q} onChange={(e) => setSQ(qi, { q: e.target.value })} />
+                  {form.screener_questions.length > 2 && (
+                    <Button size="icon" variant="ghost" onClick={() => setForm({ ...form, screener_questions: form.screener_questions.filter((_: any, x: number) => x !== qi) })}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {q.options.map((opt: string, oi: number) => (
+                    <div key={oi} className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name={`s-correct-${qi}`}
+                        checked={q.correct === oi}
+                        onChange={() => setSQ(qi, { correct: oi })}
+                        title="Mark as correct answer"
+                        className="h-4 w-4 accent-primary"
+                      />
+                      <Input placeholder={`Option ${oi + 1}`} value={opt} onChange={(e) => setSOpt(qi, oi, e.target.value)} />
+                      {q.options.length > 2 && (
+                        <Button size="icon" variant="ghost" onClick={() => setSQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi), correct: Math.min(q.correct ?? 0, q.options.length - 2) })}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button size="sm" variant="ghost" onClick={() => setSQ(qi, { options: [...q.options, ""] })}>
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Option
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Questions</Label>
+              <Button size="sm" variant="outline" onClick={() => setForm({ ...form, questions: [...form.questions, { q: "", options: ["", ""] }] })}>
+                <Plus className="mr-1 h-3.5 w-3.5" /> Add question
+              </Button>
+            </div>
+            {form.questions.map((q: any, qi: number) => (
+              <div key={qi} className="rounded-xl border border-border p-3">
+                <div className="mb-2 flex gap-2">
+                  <Input placeholder={`Question ${qi + 1}`} value={q.q} onChange={(e) => setQ(qi, { q: e.target.value })} />
+                  {form.questions.length > 1 && (
+                    <Button size="icon" variant="ghost" onClick={() => setForm({ ...form, questions: form.questions.filter((_: any, x: number) => x !== qi) })}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {q.options.map((opt: string, oi: number) => (
+                    <div key={oi} className="flex gap-2">
+                      <Input placeholder={`Option ${oi + 1}`} value={opt} onChange={(e) => setOpt(qi, oi, e.target.value)} />
+                      {q.options.length > 2 && (
+                        <Button size="icon" variant="ghost" onClick={() => setQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi) })}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button size="sm" variant="ghost" onClick={() => setQ(qi, { options: [...q.options, ""] })}>
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Option
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <Button onClick={save} disabled={saving} className="w-full">{saving ? "Saving..." : editId ? "Update survey" : "Create survey"}</Button>
       </FormCard>
 
       <ListCard title={`All surveys (${items.length})`}>
         {items.map((s) => (
-          <Row key={s.id} title={s.title} subtitle={`${s.category} · ${s.reward_cents} coins · ${s.estimated_minutes}m`} onEdit={() => edit(s)} onDelete={() => del(s.id)} />
+          <Row
+            key={s.id}
+            title={s.title}
+            subtitle={`${s.category} · ${s.reward_cents} coins · ${s.estimated_minutes}m${s.external_url ? " · external link" : ""}`}
+            onEdit={() => edit(s)}
+            onDelete={() => del(s.id)}
+          />
         ))}
       </ListCard>
     </div>
