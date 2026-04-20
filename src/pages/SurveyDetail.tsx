@@ -129,9 +129,9 @@ const SurveyDetail = () => {
     toast.success(`+${survey.reward_cents} coins earned!`);
   };
 
-  // ----- Screener submit -----
-  const submitScreener = () => {
-    if (!survey) return;
+  // ----- Screener submit: create the pending claim with a unique UID, then unlock the link -----
+  const submitScreener = async () => {
+    if (!survey || !userId) return;
     const sq = survey.screener_questions ?? [];
     if (Object.keys(answers).length < sq.length) {
       toast.error("Please answer all screener questions");
@@ -142,13 +142,8 @@ const SurveyDetail = () => {
       setStage("screener_failed");
       return;
     }
-    setStage("external_open");
-  };
-
-  // ----- Confirm external completion -----
-  const submitClaim = async () => {
-    if (!survey || !userId) return;
     setSubmitting(true);
+    const uid = generateUid();
     const { error } = await supabase.from("survey_claims").insert({
       user_id: userId,
       survey_id: survey.id,
@@ -156,9 +151,17 @@ const SurveyDetail = () => {
       reward_cents: survey.reward_cents,
       link_opened_at: new Date().toISOString(),
       status: "pending",
+      tracking_uid: uid,
     });
     setSubmitting(false);
     if (error) return toast.error(error.message);
+    setTrackingUid(uid);
+    setExternalUrl(survey.external_url ? buildSurveyUrl(survey.external_url, uid) : null);
+    setStage("external_open");
+  };
+
+  // ----- Confirm completion: nothing to insert (claim already exists) -----
+  const confirmCompleted = () => {
     setStage("submitted");
     toast.success("Submitted for review!");
   };
