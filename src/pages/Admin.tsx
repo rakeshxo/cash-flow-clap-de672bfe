@@ -542,6 +542,11 @@ const SurveyClaimsAdmin = () => {
             <p className="text-xs text-muted-foreground">
               User {c.user_id.slice(0, 8)} · {new Date(c.submitted_at).toLocaleString()} · {c.reward_cents} coins
             </p>
+            {c.tracking_uid && (
+              <p className="mt-1 break-all text-xs text-muted-foreground">
+                UID: <span className="font-mono text-foreground">{c.tracking_uid}</span>
+              </p>
+            )}
             {c.surveys?.external_url && (
               <a href={c.surveys.external_url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline">
                 <ExternalLink className="h-3 w-3" /> Open external link

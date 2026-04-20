@@ -22,6 +22,30 @@ type Survey = {
 
 type Stage = "loading" | "screener" | "in_app" | "screener_failed" | "external_open" | "submitted" | "done";
 
+// Generate a short, URL-safe unique ID (~22 chars, ~128 bits of entropy)
+const generateUid = () => {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+
+// Substitute UID into the survey URL.
+// - Replaces literal "XXX" (case-sensitive) if present
+// - Otherwise replaces an existing uid= query param value
+// - Otherwise appends ?uid= or &uid=
+const buildSurveyUrl = (rawUrl: string, uid: string) => {
+  if (rawUrl.includes("XXX")) return rawUrl.replace(/XXX/g, uid);
+  try {
+    const u = new URL(rawUrl);
+    u.searchParams.set("uid", uid);
+    return u.toString();
+  } catch {
+    const sep = rawUrl.includes("?") ? "&" : "?";
+    return `${rawUrl}${sep}uid=${uid}`;
+  }
+};
+
 const SurveyDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -30,6 +54,8 @@ const SurveyDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [stage, setStage] = useState<Stage>("loading");
   const [userId, setUserId] = useState<string | null>(null);
+  const [trackingUid, setTrackingUid] = useState<string | null>(null);
+  const [externalUrl, setExternalUrl] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -50,13 +76,18 @@ const SurveyDetail = () => {
       if (survey.external_url) {
         const { data: existing } = await supabase
           .from("survey_claims")
-          .select("status")
+          .select("status, tracking_uid")
           .eq("survey_id", survey.id)
           .eq("user_id", data.session.user.id)
           .order("submitted_at", { ascending: false })
           .limit(1)
           .maybeSingle();
         if (existing) {
+          // If a previous claim exists, reuse its UID and short-circuit to "submitted"
+          setTrackingUid(existing.tracking_uid ?? null);
+          if (existing.tracking_uid) {
+            setExternalUrl(buildSurveyUrl(survey.external_url, existing.tracking_uid));
+          }
           setStage("submitted");
           return;
         }
@@ -98,9 +129,9 @@ const SurveyDetail = () => {
     toast.success(`+${survey.reward_cents} coins earned!`);
   };
 
-  // ----- Screener submit -----
-  const submitScreener = () => {
-    if (!survey) return;
+  // ----- Screener submit: create the pending claim with a unique UID, then unlock the link -----
+  const submitScreener = async () => {
+    if (!survey || !userId) return;
     const sq = survey.screener_questions ?? [];
     if (Object.keys(answers).length < sq.length) {
       toast.error("Please answer all screener questions");
@@ -111,13 +142,8 @@ const SurveyDetail = () => {
       setStage("screener_failed");
       return;
     }
-    setStage("external_open");
-  };
-
-  // ----- Confirm external completion -----
-  const submitClaim = async () => {
-    if (!survey || !userId) return;
     setSubmitting(true);
+    const uid = generateUid();
     const { error } = await supabase.from("survey_claims").insert({
       user_id: userId,
       survey_id: survey.id,
@@ -125,9 +151,17 @@ const SurveyDetail = () => {
       reward_cents: survey.reward_cents,
       link_opened_at: new Date().toISOString(),
       status: "pending",
+      tracking_uid: uid,
     });
     setSubmitting(false);
     if (error) return toast.error(error.message);
+    setTrackingUid(uid);
+    setExternalUrl(survey.external_url ? buildSurveyUrl(survey.external_url, uid) : null);
+    setStage("external_open");
+  };
+
+  // ----- Confirm completion: nothing to insert (claim already exists) -----
+  const confirmCompleted = () => {
     setStage("submitted");
     toast.success("Submitted for review!");
   };
@@ -202,12 +236,17 @@ const SurveyDetail = () => {
               Open the survey, complete it on the external site, then come back and tap "I've completed it" to submit for review.
             </p>
             <Button asChild className="mt-6 h-12 w-full text-base shadow-glow">
-              <a href={survey.external_url ?? "#"} target="_blank" rel="noreferrer">
+              <a href={externalUrl ?? survey.external_url ?? "#"} target="_blank" rel="noreferrer">
                 <ExternalLink className="mr-2 h-4 w-4" /> Open survey
               </a>
             </Button>
-            <Button onClick={submitClaim} disabled={submitting} variant="outline" className="mt-3 h-12 w-full text-base">
-              {submitting ? "Submitting..." : "I've completed it — submit for review"}
+            {trackingUid && (
+              <p className="mt-3 break-all text-center text-xs text-muted-foreground">
+                Your tracking ID: <span className="font-mono text-foreground">{trackingUid}</span>
+              </p>
+            )}
+            <Button onClick={confirmCompleted} disabled={submitting} variant="outline" className="mt-3 h-12 w-full text-base">
+              I've completed it — submit for review
             </Button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Coins are awarded after admin verification.
