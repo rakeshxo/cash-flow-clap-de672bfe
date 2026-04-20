@@ -346,6 +346,7 @@ export type Database = {
           status: string
           submitted_at: string
           survey_id: string
+          tracking_uid: string | null
           user_id: string
         }
         Insert: {
@@ -358,6 +359,7 @@ export type Database = {
           status?: string
           submitted_at?: string
           survey_id: string
+          tracking_uid?: string | null
           user_id: string
         }
         Update: {
@@ -370,6 +372,7 @@ export type Database = {
           status?: string
           submitted_at?: string
           survey_id?: string
+          tracking_uid?: string | null
           user_id?: string
         }
         Relationships: [
