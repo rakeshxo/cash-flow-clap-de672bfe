@@ -236,12 +236,17 @@ const SurveyDetail = () => {
               Open the survey, complete it on the external site, then come back and tap "I've completed it" to submit for review.
             </p>
             <Button asChild className="mt-6 h-12 w-full text-base shadow-glow">
-              <a href={survey.external_url ?? "#"} target="_blank" rel="noreferrer">
+              <a href={externalUrl ?? survey.external_url ?? "#"} target="_blank" rel="noreferrer">
                 <ExternalLink className="mr-2 h-4 w-4" /> Open survey
               </a>
             </Button>
-            <Button onClick={submitClaim} disabled={submitting} variant="outline" className="mt-3 h-12 w-full text-base">
-              {submitting ? "Submitting..." : "I've completed it — submit for review"}
+            {trackingUid && (
+              <p className="mt-3 break-all text-center text-xs text-muted-foreground">
+                Your tracking ID: <span className="font-mono text-foreground">{trackingUid}</span>
+              </p>
+            )}
+            <Button onClick={confirmCompleted} disabled={submitting} variant="outline" className="mt-3 h-12 w-full text-base">
+              I've completed it — submit for review
             </Button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Coins are awarded after admin verification.
