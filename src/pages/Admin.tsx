@@ -490,7 +490,78 @@ const WithdrawalsAdmin = () => {
   );
 };
 
-/* ---------- Users ---------- */
+/* ---------- Survey Claims ---------- */
+const SurveyClaimsAdmin = () => {
+  const [items, setItems] = useState<any[]>([]);
+  const load = async () => {
+    const { data } = await supabase
+      .from("survey_claims")
+      .select("*, surveys(title, external_url)")
+      .order("submitted_at", { ascending: false });
+    setItems(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+
+  const approve = async (claim: any) => {
+    const { error } = await supabase
+      .from("survey_claims")
+      .update({ status: "approved", reviewed_at: new Date().toISOString() })
+      .eq("id", claim.id)
+      .eq("status", "pending");
+    if (error) return toast.error(error.message);
+    try {
+      await awardCoins({
+        userId: claim.user_id,
+        amount: claim.reward_cents,
+        type: "survey",
+        description: `Approved: ${claim.surveys?.title ?? "External survey"}`,
+        referenceId: claim.survey_id,
+      });
+    } catch (e: any) {
+      toast.error("Approved but failed to award coins: " + e.message);
+    }
+    toast.success("Claim approved & coins awarded");
+    load();
+  };
+  const reject = async (id: string) => {
+    const { error } = await supabase
+      .from("survey_claims")
+      .update({ status: "rejected", reviewed_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Claim rejected");
+    load();
+  };
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      {items.length === 0 ? <p className="p-8 text-center text-muted-foreground">No survey claims yet.</p> : items.map((c) => (
+        <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4 last:border-0">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-foreground">{c.surveys?.title ?? "Survey"}</p>
+            <p className="text-xs text-muted-foreground">
+              User {c.user_id.slice(0, 8)} · {new Date(c.submitted_at).toLocaleString()} · {c.reward_cents} coins
+            </p>
+            {c.surveys?.external_url && (
+              <a href={c.surveys.external_url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                <ExternalLink className="h-3 w-3" /> Open external link
+              </a>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs capitalize text-secondary-foreground">{c.status}</span>
+            {c.status === "pending" && (
+              <>
+                <Button size="sm" onClick={() => approve(c)}><Check className="mr-1 h-3.5 w-3.5" /> Approve</Button>
+                <Button size="sm" variant="outline" onClick={() => reject(c.id)}><X className="mr-1 h-3.5 w-3.5" /> Reject</Button>
+              </>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 const UsersAdmin = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
