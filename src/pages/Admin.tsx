@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { Shield, Plus, Trash2, Pencil, X, Check } from "lucide-react";
+import { awardCoins } from "@/lib/coins";
+import { Shield, Plus, Trash2, Pencil, X, Check, ExternalLink } from "lucide-react";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const Admin = () => {
       <Tabs defaultValue="surveys">
         <TabsList className="mb-6 flex w-full flex-wrap">
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
+          <TabsTrigger value="claims">Survey claims</TabsTrigger>
           <TabsTrigger value="videos">Videos</TabsTrigger>
           <TabsTrigger value="offers">Offers</TabsTrigger>
           <TabsTrigger value="rewards">Rewards</TabsTrigger>
@@ -49,6 +51,7 @@ const Admin = () => {
           <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
         <TabsContent value="surveys"><SurveysAdmin /></TabsContent>
+        <TabsContent value="claims"><SurveyClaimsAdmin /></TabsContent>
         <TabsContent value="videos"><VideosAdmin /></TabsContent>
         <TabsContent value="offers"><OffersAdmin /></TabsContent>
         <TabsContent value="rewards"><RewardsAdmin /></TabsContent>
@@ -61,7 +64,12 @@ const Admin = () => {
 };
 
 /* ---------- Surveys ---------- */
-const emptySurvey = { title: "", description: "", category: "General", reward_cents: 25, estimated_minutes: 5, questions: [{ q: "", options: ["", ""] }] };
+const emptySurvey = {
+  title: "", description: "", category: "General", reward_cents: 25, estimated_minutes: 5,
+  questions: [{ q: "", options: ["", ""] }],
+  external_url: "",
+  screener_questions: [{ q: "", options: ["", ""], correct: 0 }],
+};
 
 const SurveysAdmin = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -79,13 +87,33 @@ const SurveysAdmin = () => {
 
   const save = async () => {
     setSaving(true);
-    // Validate
-    if (!form.title || form.questions.some((q: any) => !q.q || q.options.some((o: string) => !o))) {
-      setSaving(false);
-      return toast.error("Fill all fields including question options");
+    if (!form.title) { setSaving(false); return toast.error("Title is required"); }
+    const hasExternal = !!form.external_url?.trim();
+    const screener = form.screener_questions ?? [];
+    if (hasExternal) {
+      if (screener.length < 2 || screener.length > 5) {
+        setSaving(false); return toast.error("Add 2 to 5 screener questions");
+      }
+      if (screener.some((q: any) => !q.q || q.options.some((o: string) => !o))) {
+        setSaving(false); return toast.error("Fill all screener questions and options");
+      }
+    } else {
+      if (form.questions.some((q: any) => !q.q || q.options.some((o: string) => !o))) {
+        setSaving(false); return toast.error("Fill all question options");
+      }
     }
     const { data: sess } = await supabase.auth.getSession();
-    const payload = { ...form, reward_cents: Number(form.reward_cents), estimated_minutes: Number(form.estimated_minutes), created_by: sess.session?.user.id ?? null };
+    const payload: any = {
+      title: form.title,
+      description: form.description,
+      category: form.category,
+      reward_cents: Number(form.reward_cents),
+      estimated_minutes: Number(form.estimated_minutes),
+      questions: hasExternal ? [] : form.questions,
+      external_url: hasExternal ? form.external_url.trim() : null,
+      screener_questions: hasExternal ? screener : [],
+      created_by: sess.session?.user.id ?? null,
+    };
     const { error } = editId
       ? await supabase.from("surveys").update(payload).eq("id", editId)
       : await supabase.from("surveys").insert(payload);
@@ -102,6 +130,10 @@ const SurveysAdmin = () => {
       title: s.title, description: s.description, category: s.category,
       reward_cents: s.reward_cents, estimated_minutes: s.estimated_minutes,
       questions: Array.isArray(s.questions) && s.questions.length ? s.questions : [{ q: "", options: ["", ""] }],
+      external_url: s.external_url ?? "",
+      screener_questions: Array.isArray(s.screener_questions) && s.screener_questions.length
+        ? s.screener_questions
+        : [{ q: "", options: ["", ""], correct: 0 }],
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -123,6 +155,18 @@ const SurveysAdmin = () => {
     qs[qi].options[oi] = val;
     setForm({ ...form, questions: qs });
   };
+  const setSQ = (i: number, patch: any) => {
+    const qs = [...form.screener_questions];
+    qs[i] = { ...qs[i], ...patch };
+    setForm({ ...form, screener_questions: qs });
+  };
+  const setSOpt = (qi: number, oi: number, val: string) => {
+    const qs = [...form.screener_questions];
+    qs[qi].options[oi] = val;
+    setForm({ ...form, screener_questions: qs });
+  };
+
+  const hasExternal = !!form.external_url?.trim();
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -135,48 +179,118 @@ const SurveysAdmin = () => {
           <Field label="Minutes"><Input type="number" value={form.estimated_minutes} onChange={(e) => setForm({ ...form, estimated_minutes: e.target.value })} /></Field>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label>Questions</Label>
-            <Button size="sm" variant="outline" onClick={() => setForm({ ...form, questions: [...form.questions, { q: "", options: ["", ""] }] })}>
-              <Plus className="mr-1 h-3.5 w-3.5" /> Add question
-            </Button>
-          </div>
-          {form.questions.map((q: any, qi: number) => (
-            <div key={qi} className="rounded-xl border border-border p-3">
-              <div className="mb-2 flex gap-2">
-                <Input placeholder={`Question ${qi + 1}`} value={q.q} onChange={(e) => setQ(qi, { q: e.target.value })} />
-                {form.questions.length > 1 && (
-                  <Button size="icon" variant="ghost" onClick={() => setForm({ ...form, questions: form.questions.filter((_: any, x: number) => x !== qi) })}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="space-y-2">
-                {q.options.map((opt: string, oi: number) => (
-                  <div key={oi} className="flex gap-2">
-                    <Input placeholder={`Option ${oi + 1}`} value={opt} onChange={(e) => setOpt(qi, oi, e.target.value)} />
-                    {q.options.length > 2 && (
-                      <Button size="icon" variant="ghost" onClick={() => setQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi) })}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button size="sm" variant="ghost" onClick={() => setQ(qi, { options: [...q.options, ""] })}>
-                  <Plus className="mr-1 h-3.5 w-3.5" /> Option
-                </Button>
-              </div>
+        <Field label="External survey link (optional — enables screener mode)">
+          <Input
+            value={form.external_url ?? ""}
+            onChange={(e) => setForm({ ...form, external_url: e.target.value })}
+            placeholder="https://your-survey-provider.com/..."
+          />
+        </Field>
+        <p className="-mt-2 text-xs text-muted-foreground">
+          {hasExternal
+            ? "Screener mode: users must answer 2–5 screener questions correctly to unlock the link. Coins are awarded after admin approval."
+            : "In-app mode: users answer the questions below to earn coins instantly."}
+        </p>
+
+        {hasExternal ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Screener questions (2–5, mark correct answer)</Label>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={(form.screener_questions?.length ?? 0) >= 5}
+                onClick={() => setForm({ ...form, screener_questions: [...form.screener_questions, { q: "", options: ["", ""], correct: 0 }] })}
+              >
+                <Plus className="mr-1 h-3.5 w-3.5" /> Add question
+              </Button>
             </div>
-          ))}
-        </div>
+            {form.screener_questions.map((q: any, qi: number) => (
+              <div key={qi} className="rounded-xl border border-border p-3">
+                <div className="mb-2 flex gap-2">
+                  <Input placeholder={`Screener ${qi + 1}`} value={q.q} onChange={(e) => setSQ(qi, { q: e.target.value })} />
+                  {form.screener_questions.length > 2 && (
+                    <Button size="icon" variant="ghost" onClick={() => setForm({ ...form, screener_questions: form.screener_questions.filter((_: any, x: number) => x !== qi) })}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {q.options.map((opt: string, oi: number) => (
+                    <div key={oi} className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name={`s-correct-${qi}`}
+                        checked={q.correct === oi}
+                        onChange={() => setSQ(qi, { correct: oi })}
+                        title="Mark as correct answer"
+                        className="h-4 w-4 accent-primary"
+                      />
+                      <Input placeholder={`Option ${oi + 1}`} value={opt} onChange={(e) => setSOpt(qi, oi, e.target.value)} />
+                      {q.options.length > 2 && (
+                        <Button size="icon" variant="ghost" onClick={() => setSQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi), correct: Math.min(q.correct ?? 0, q.options.length - 2) })}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button size="sm" variant="ghost" onClick={() => setSQ(qi, { options: [...q.options, ""] })}>
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Option
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Questions</Label>
+              <Button size="sm" variant="outline" onClick={() => setForm({ ...form, questions: [...form.questions, { q: "", options: ["", ""] }] })}>
+                <Plus className="mr-1 h-3.5 w-3.5" /> Add question
+              </Button>
+            </div>
+            {form.questions.map((q: any, qi: number) => (
+              <div key={qi} className="rounded-xl border border-border p-3">
+                <div className="mb-2 flex gap-2">
+                  <Input placeholder={`Question ${qi + 1}`} value={q.q} onChange={(e) => setQ(qi, { q: e.target.value })} />
+                  {form.questions.length > 1 && (
+                    <Button size="icon" variant="ghost" onClick={() => setForm({ ...form, questions: form.questions.filter((_: any, x: number) => x !== qi) })}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {q.options.map((opt: string, oi: number) => (
+                    <div key={oi} className="flex gap-2">
+                      <Input placeholder={`Option ${oi + 1}`} value={opt} onChange={(e) => setOpt(qi, oi, e.target.value)} />
+                      {q.options.length > 2 && (
+                        <Button size="icon" variant="ghost" onClick={() => setQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi) })}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button size="sm" variant="ghost" onClick={() => setQ(qi, { options: [...q.options, ""] })}>
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Option
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <Button onClick={save} disabled={saving} className="w-full">{saving ? "Saving..." : editId ? "Update survey" : "Create survey"}</Button>
       </FormCard>
 
       <ListCard title={`All surveys (${items.length})`}>
         {items.map((s) => (
-          <Row key={s.id} title={s.title} subtitle={`${s.category} · ${s.reward_cents} coins · ${s.estimated_minutes}m`} onEdit={() => edit(s)} onDelete={() => del(s.id)} />
+          <Row
+            key={s.id}
+            title={s.title}
+            subtitle={`${s.category} · ${s.reward_cents} coins · ${s.estimated_minutes}m${s.external_url ? " · external link" : ""}`}
+            onEdit={() => edit(s)}
+            onDelete={() => del(s.id)}
+          />
         ))}
       </ListCard>
     </div>
@@ -376,7 +490,78 @@ const WithdrawalsAdmin = () => {
   );
 };
 
-/* ---------- Users ---------- */
+/* ---------- Survey Claims ---------- */
+const SurveyClaimsAdmin = () => {
+  const [items, setItems] = useState<any[]>([]);
+  const load = async () => {
+    const { data } = await supabase
+      .from("survey_claims")
+      .select("*, surveys(title, external_url)")
+      .order("submitted_at", { ascending: false });
+    setItems(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+
+  const approve = async (claim: any) => {
+    const { error } = await supabase
+      .from("survey_claims")
+      .update({ status: "approved", reviewed_at: new Date().toISOString() })
+      .eq("id", claim.id)
+      .eq("status", "pending");
+    if (error) return toast.error(error.message);
+    try {
+      await awardCoins({
+        userId: claim.user_id,
+        amount: claim.reward_cents,
+        type: "survey",
+        description: `Approved: ${claim.surveys?.title ?? "External survey"}`,
+        referenceId: claim.survey_id,
+      });
+    } catch (e: any) {
+      toast.error("Approved but failed to award coins: " + e.message);
+    }
+    toast.success("Claim approved & coins awarded");
+    load();
+  };
+  const reject = async (id: string) => {
+    const { error } = await supabase
+      .from("survey_claims")
+      .update({ status: "rejected", reviewed_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Claim rejected");
+    load();
+  };
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      {items.length === 0 ? <p className="p-8 text-center text-muted-foreground">No survey claims yet.</p> : items.map((c) => (
+        <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4 last:border-0">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-foreground">{c.surveys?.title ?? "Survey"}</p>
+            <p className="text-xs text-muted-foreground">
+              User {c.user_id.slice(0, 8)} · {new Date(c.submitted_at).toLocaleString()} · {c.reward_cents} coins
+            </p>
+            {c.surveys?.external_url && (
+              <a href={c.surveys.external_url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                <ExternalLink className="h-3 w-3" /> Open external link
+              </a>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs capitalize text-secondary-foreground">{c.status}</span>
+            {c.status === "pending" && (
+              <>
+                <Button size="sm" onClick={() => approve(c)}><Check className="mr-1 h-3.5 w-3.5" /> Approve</Button>
+                <Button size="sm" variant="outline" onClick={() => reject(c.id)}><X className="mr-1 h-3.5 w-3.5" /> Reject</Button>
+              </>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 const UsersAdmin = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

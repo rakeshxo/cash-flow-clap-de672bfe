@@ -335,6 +335,53 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_claims: {
+        Row: {
+          id: string
+          link_opened_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reward_cents: number
+          screener_answers: Json
+          status: string
+          submitted_at: string
+          survey_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          link_opened_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reward_cents?: number
+          screener_answers?: Json
+          status?: string
+          submitted_at?: string
+          survey_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          link_opened_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reward_cents?: number
+          screener_answers?: Json
+          status?: string
+          submitted_at?: string
+          survey_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_claims_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       survey_completions: {
         Row: {
           answers: Json
@@ -377,9 +424,11 @@ export type Database = {
           created_by: string | null
           description: string
           estimated_minutes: number
+          external_url: string | null
           id: string
           questions: Json
           reward_cents: number
+          screener_questions: Json
           title: string
         }
         Insert: {
@@ -388,9 +437,11 @@ export type Database = {
           created_by?: string | null
           description: string
           estimated_minutes?: number
+          external_url?: string | null
           id?: string
           questions?: Json
           reward_cents?: number
+          screener_questions?: Json
           title: string
         }
         Update: {
@@ -399,9 +450,11 @@ export type Database = {
           created_by?: string | null
           description?: string
           estimated_minutes?: number
+          external_url?: string | null
           id?: string
           questions?: Json
           reward_cents?: number
+          screener_questions?: Json
           title?: string
         }
         Relationships: []
