@@ -22,6 +22,30 @@ type Survey = {
 
 type Stage = "loading" | "screener" | "in_app" | "screener_failed" | "external_open" | "submitted" | "done";
 
+// Generate a short, URL-safe unique ID (~22 chars, ~128 bits of entropy)
+const generateUid = () => {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+
+// Substitute UID into the survey URL.
+// - Replaces literal "XXX" (case-sensitive) if present
+// - Otherwise replaces an existing uid= query param value
+// - Otherwise appends ?uid= or &uid=
+const buildSurveyUrl = (rawUrl: string, uid: string) => {
+  if (rawUrl.includes("XXX")) return rawUrl.replace(/XXX/g, uid);
+  try {
+    const u = new URL(rawUrl);
+    u.searchParams.set("uid", uid);
+    return u.toString();
+  } catch {
+    const sep = rawUrl.includes("?") ? "&" : "?";
+    return `${rawUrl}${sep}uid=${uid}`;
+  }
+};
+
 const SurveyDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -30,6 +54,8 @@ const SurveyDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [stage, setStage] = useState<Stage>("loading");
   const [userId, setUserId] = useState<string | null>(null);
+  const [trackingUid, setTrackingUid] = useState<string | null>(null);
+  const [externalUrl, setExternalUrl] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
