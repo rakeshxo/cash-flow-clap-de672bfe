@@ -84,13 +84,33 @@ const SurveysAdmin = () => {
 
   const save = async () => {
     setSaving(true);
-    // Validate
-    if (!form.title || form.questions.some((q: any) => !q.q || q.options.some((o: string) => !o))) {
-      setSaving(false);
-      return toast.error("Fill all fields including question options");
+    if (!form.title) { setSaving(false); return toast.error("Title is required"); }
+    const hasExternal = !!form.external_url?.trim();
+    const screener = form.screener_questions ?? [];
+    if (hasExternal) {
+      if (screener.length < 2 || screener.length > 5) {
+        setSaving(false); return toast.error("Add 2 to 5 screener questions");
+      }
+      if (screener.some((q: any) => !q.q || q.options.some((o: string) => !o))) {
+        setSaving(false); return toast.error("Fill all screener questions and options");
+      }
+    } else {
+      if (form.questions.some((q: any) => !q.q || q.options.some((o: string) => !o))) {
+        setSaving(false); return toast.error("Fill all question options");
+      }
     }
     const { data: sess } = await supabase.auth.getSession();
-    const payload = { ...form, reward_cents: Number(form.reward_cents), estimated_minutes: Number(form.estimated_minutes), created_by: sess.session?.user.id ?? null };
+    const payload: any = {
+      title: form.title,
+      description: form.description,
+      category: form.category,
+      reward_cents: Number(form.reward_cents),
+      estimated_minutes: Number(form.estimated_minutes),
+      questions: hasExternal ? [] : form.questions,
+      external_url: hasExternal ? form.external_url.trim() : null,
+      screener_questions: hasExternal ? screener : [],
+      created_by: sess.session?.user.id ?? null,
+    };
     const { error } = editId
       ? await supabase.from("surveys").update(payload).eq("id", editId)
       : await supabase.from("surveys").insert(payload);
@@ -107,6 +127,10 @@ const SurveysAdmin = () => {
       title: s.title, description: s.description, category: s.category,
       reward_cents: s.reward_cents, estimated_minutes: s.estimated_minutes,
       questions: Array.isArray(s.questions) && s.questions.length ? s.questions : [{ q: "", options: ["", ""] }],
+      external_url: s.external_url ?? "",
+      screener_questions: Array.isArray(s.screener_questions) && s.screener_questions.length
+        ? s.screener_questions
+        : [{ q: "", options: ["", ""], correct: 0 }],
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
