@@ -76,13 +76,18 @@ const SurveyDetail = () => {
       if (survey.external_url) {
         const { data: existing } = await supabase
           .from("survey_claims")
-          .select("status")
+          .select("status, tracking_uid")
           .eq("survey_id", survey.id)
           .eq("user_id", data.session.user.id)
           .order("submitted_at", { ascending: false })
           .limit(1)
           .maybeSingle();
         if (existing) {
+          // If a previous claim exists, reuse its UID and short-circuit to "submitted"
+          setTrackingUid(existing.tracking_uid ?? null);
+          if (existing.tracking_uid) {
+            setExternalUrl(buildSurveyUrl(survey.external_url, existing.tracking_uid));
+          }
           setStage("submitted");
           return;
         }
