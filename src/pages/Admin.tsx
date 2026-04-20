@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { Shield, Plus, Trash2, Pencil, X, Check } from "lucide-react";
+import { awardCoins } from "@/lib/coins";
+import { Shield, Plus, Trash2, Pencil, X, Check, ExternalLink } from "lucide-react";
 
 const Admin = () => {
   const navigate = useNavigate();
