@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       admin.from("profiles").select(
         "age_range,gender,country,employment_status,job_title,industry,income_range,interests,shopping_habits,marital_status,has_kids,education,background_completed",
       ).eq("user_id", userId).maybeSingle(),
-      admin.from("surveys").select("id,title,description,category,reward_cents,estimated_minutes")
+      admin.from("surveys").select("id,title,description,category,reward_cents,estimated_minutes,target_audience")
         .not("created_by", "is", null),
     ]);
 
