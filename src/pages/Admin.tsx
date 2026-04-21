@@ -94,8 +94,11 @@ const SurveysAdmin = () => {
       if (screener.length < 2 || screener.length > 5) {
         setSaving(false); return toast.error("Add 2 to 5 screener questions");
       }
-      if (screener.some((q: any) => !q.q || q.options.some((o: string) => !o))) {
-        setSaving(false); return toast.error("Fill all screener questions and options");
+      for (const q of screener as any[]) {
+        if (!q.q?.trim()) { setSaving(false); return toast.error("Fill all screener questions"); }
+        if ((q.type ?? "choice") === "choice" && (q.options ?? []).some((o: string) => !o)) {
+          setSaving(false); return toast.error("Fill all screener options");
+        }
       }
     } else {
       if (form.questions.some((q: any) => !q.q || q.options.some((o: string) => !o))) {
@@ -200,7 +203,7 @@ const SurveysAdmin = () => {
                 size="sm"
                 variant="outline"
                 disabled={(form.screener_questions?.length ?? 0) >= 5}
-                onClick={() => setForm({ ...form, screener_questions: [...form.screener_questions, { q: "", options: ["", ""], correct: 0 }] })}
+                onClick={() => setForm({ ...form, screener_questions: [...form.screener_questions, { q: "", type: "choice", options: ["", ""], correct: 0 }] })}
               >
                 <Plus className="mr-1 h-3.5 w-3.5" /> Add question
               </Button>
