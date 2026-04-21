@@ -68,7 +68,7 @@ const emptySurvey = {
   title: "", description: "", category: "General", reward_cents: 25, estimated_minutes: 5,
   questions: [{ q: "", options: ["", ""] }],
   external_url: "",
-  screener_questions: [{ q: "", options: ["", ""], correct: 0 }],
+  screener_questions: [{ q: "", type: "choice", options: ["", ""], correct: 0 }],
 };
 
 const SurveysAdmin = () => {
