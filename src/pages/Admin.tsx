@@ -68,7 +68,7 @@ const emptySurvey = {
   title: "", description: "", category: "General", reward_cents: 25, estimated_minutes: 5,
   questions: [{ q: "", options: ["", ""] }],
   external_url: "",
-  screener_questions: [{ q: "", options: ["", ""], correct: 0 }],
+  screener_questions: [{ q: "", type: "choice", options: ["", ""], correct: 0 }],
 };
 
 const SurveysAdmin = () => {
@@ -94,8 +94,11 @@ const SurveysAdmin = () => {
       if (screener.length < 2 || screener.length > 5) {
         setSaving(false); return toast.error("Add 2 to 5 screener questions");
       }
-      if (screener.some((q: any) => !q.q || q.options.some((o: string) => !o))) {
-        setSaving(false); return toast.error("Fill all screener questions and options");
+      for (const q of screener as any[]) {
+        if (!q.q?.trim()) { setSaving(false); return toast.error("Fill all screener questions"); }
+        if ((q.type ?? "choice") === "choice" && (q.options ?? []).some((o: string) => !o)) {
+          setSaving(false); return toast.error("Fill all screener options");
+        }
       }
     } else {
       if (form.questions.some((q: any) => !q.q || q.options.some((o: string) => !o))) {
@@ -200,12 +203,14 @@ const SurveysAdmin = () => {
                 size="sm"
                 variant="outline"
                 disabled={(form.screener_questions?.length ?? 0) >= 5}
-                onClick={() => setForm({ ...form, screener_questions: [...form.screener_questions, { q: "", options: ["", ""], correct: 0 }] })}
+                onClick={() => setForm({ ...form, screener_questions: [...form.screener_questions, { q: "", type: "choice", options: ["", ""], correct: 0 }] })}
               >
                 <Plus className="mr-1 h-3.5 w-3.5" /> Add question
               </Button>
             </div>
-            {form.screener_questions.map((q: any, qi: number) => (
+            {form.screener_questions.map((q: any, qi: number) => {
+              const qType = q.type ?? "choice";
+              return (
               <div key={qi} className="rounded-xl border border-border p-3">
                 <div className="mb-2 flex gap-2">
                   <Input placeholder={`Screener ${qi + 1}`} value={q.q} onChange={(e) => setSQ(qi, { q: e.target.value })} />
@@ -215,31 +220,55 @@ const SurveysAdmin = () => {
                     </Button>
                   )}
                 </div>
-                <div className="space-y-2">
-                  {q.options.map((opt: string, oi: number) => (
-                    <div key={oi} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name={`s-correct-${qi}`}
-                        checked={q.correct === oi}
-                        onChange={() => setSQ(qi, { correct: oi })}
-                        title="Mark as correct answer"
-                        className="h-4 w-4 accent-primary"
-                      />
-                      <Input placeholder={`Option ${oi + 1}`} value={opt} onChange={(e) => setSOpt(qi, oi, e.target.value)} />
-                      {q.options.length > 2 && (
-                        <Button size="icon" variant="ghost" onClick={() => setSQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi), correct: Math.min(q.correct ?? 0, q.options.length - 2) })}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button size="sm" variant="ghost" onClick={() => setSQ(qi, { options: [...q.options, ""] })}>
-                    <Plus className="mr-1 h-3.5 w-3.5" /> Option
+                <div className="mb-3 flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={qType === "choice" ? "default" : "outline"}
+                    onClick={() => setSQ(qi, { type: "choice", options: q.options?.length ? q.options : ["", ""], correct: q.correct ?? 0 })}
+                  >
+                    Multiple choice
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={qType === "open" ? "default" : "outline"}
+                    onClick={() => setSQ(qi, { type: "open" })}
+                  >
+                    Open-ended
                   </Button>
                 </div>
+                {qType === "choice" ? (
+                  <div className="space-y-2">
+                    {q.options.map((opt: string, oi: number) => (
+                      <div key={oi} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name={`s-correct-${qi}`}
+                          checked={q.correct === oi}
+                          onChange={() => setSQ(qi, { correct: oi })}
+                          title="Mark as correct answer"
+                          className="h-4 w-4 accent-primary"
+                        />
+                        <Input placeholder={`Option ${oi + 1}`} value={opt} onChange={(e) => setSOpt(qi, oi, e.target.value)} />
+                        {q.options.length > 2 && (
+                          <Button size="icon" variant="ghost" onClick={() => setSQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi), correct: Math.min(q.correct ?? 0, q.options.length - 2) })}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button size="sm" variant="ghost" onClick={() => setSQ(qi, { options: [...q.options, ""] })}>
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Option
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Respondent will type a free-text answer. No "correct" option — every response passes this question.
+                  </p>
+                )}
               </div>
-            ))}
+            );})}
           </div>
         ) : (
           <div className="space-y-3">
