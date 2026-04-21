@@ -50,8 +50,15 @@ const Earn = () => {
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {available.map((s) => (
-            <article key={s.id} className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-card transition hover:-translate-y-1 hover:shadow-glow">
-              <span className="mb-3 w-fit rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">{s.category}</span>
+            <article key={s.id} className={`flex flex-col rounded-2xl border bg-card p-6 shadow-card transition hover:-translate-y-1 hover:shadow-glow ${scores[s.id]?.score >= 60 ? "border-primary/40" : "border-border"}`}>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <span className="w-fit rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">{s.category}</span>
+                {scores[s.id] && (
+                  <span className="flex items-center gap-1 rounded-full bg-gradient-hero px-2.5 py-0.5 text-xs font-bold text-primary-foreground">
+                    <Wand2 className="h-3 w-3" /> {scores[s.id].score}%
+                  </span>
+                )}
+              </div>
               <h3 className="font-display text-lg font-bold text-foreground">{s.title}</h3>
               <p className="mt-1 flex-1 text-sm text-muted-foreground">{s.description}</p>
               <div className="mt-4 flex items-center justify-between text-sm">
