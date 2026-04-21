@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       admin.from("profiles").select(
         "age_range,gender,country,employment_status,job_title,industry,income_range,interests,shopping_habits,marital_status,has_kids,education,background_completed",
       ).eq("user_id", userId).maybeSingle(),
-      admin.from("surveys").select("id,title,description,category,reward_cents,estimated_minutes")
+      admin.from("surveys").select("id,title,description,category,reward_cents,estimated_minutes,target_audience")
         .not("created_by", "is", null),
     ]);
 
@@ -62,10 +62,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are a survey-matching engine. Given a respondent profile and a list of surveys, score each survey 0-100 for how well it matches the respondent (higher = better fit). Consider demographics, employment, lifestyle, and household. Return concise reasons.`;
+    const systemPrompt = `You are a survey-matching engine. Given a respondent profile and a list of surveys (each with an admin-defined target_audience), score each survey 0-100 for how well it matches the respondent (higher = better fit). Heavily weight target_audience when present — a respondent that clearly fits the targeting should score 80+, a clear mismatch should score below 30. Otherwise consider demographics, employment, lifestyle, and household. Return concise reasons.`;
 
     const userPrompt = `Respondent profile:\n${JSON.stringify(profile, null, 2)}\n\nSurveys:\n${JSON.stringify(
-      surveys.map((s: any) => ({ id: s.id, title: s.title, description: s.description, category: s.category })),
+      surveys.map((s: any) => ({ id: s.id, title: s.title, description: s.description, category: s.category, target_audience: s.target_audience ?? "" })),
       null,
       2,
     )}`;

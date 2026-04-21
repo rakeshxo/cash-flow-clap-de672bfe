@@ -69,6 +69,7 @@ const emptySurvey = {
   questions: [{ q: "", options: ["", ""] }],
   external_url: "",
   screener_questions: [{ q: "", type: "choice", options: ["", ""], correct: 0 }],
+  target_audience: "",
 };
 
 const SurveysAdmin = () => {
@@ -115,6 +116,7 @@ const SurveysAdmin = () => {
       questions: hasExternal ? [] : form.questions,
       external_url: hasExternal ? form.external_url.trim() : null,
       screener_questions: hasExternal ? screener : [],
+      target_audience: (form.target_audience ?? "").trim(),
       created_by: sess.session?.user.id ?? null,
     };
     const { error } = editId
@@ -137,6 +139,7 @@ const SurveysAdmin = () => {
       screener_questions: Array.isArray(s.screener_questions) && s.screener_questions.length
         ? s.screener_questions
         : [{ q: "", options: ["", ""], correct: 0 }],
+      target_audience: s.target_audience ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -193,6 +196,18 @@ const SurveysAdmin = () => {
           {hasExternal
             ? "Screener mode: users must answer 2–5 screener questions correctly to unlock the link. Coins are awarded after admin approval."
             : "In-app mode: users answer the questions below to earn coins instantly."}
+        </p>
+
+        <Field label="AI targeting — describe the ideal respondent (optional)">
+          <Textarea
+            rows={3}
+            value={form.target_audience ?? ""}
+            onChange={(e) => setForm({ ...form, target_audience: e.target.value })}
+            placeholder="e.g. Women aged 25–44 in the US, employed full-time in healthcare, household income $50k+, married with kids, interested in skincare and online shopping."
+          />
+        </Field>
+        <p className="-mt-2 text-xs text-muted-foreground">
+          Used by the AI to match this survey to the right respondents (demographics, employment, lifestyle, household). The more specific, the better the matches.
         </p>
 
         {hasExternal ? (
