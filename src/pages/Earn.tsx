@@ -3,30 +3,41 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Clock, Coins } from "lucide-react";
+import { Clock, Coins, Wand2 } from "lucide-react";
+import { useBackgroundGate } from "@/hooks/useBackgroundGate";
 
 const Earn = () => {
+  const { checking } = useBackgroundGate();
   const [loading, setLoading] = useState(true);
   const [surveys, setSurveys] = useState<any[]>([]);
   const [done, setDone] = useState<Set<string>>(new Set());
+  const [scores, setScores] = useState<Record<string, { score: number; reason: string }>>({});
 
   useEffect(() => {
+    if (checking) return;
     (async () => {
       const { data: sess } = await supabase.auth.getSession();
       if (!sess.session) return;
-      const [s, c] = await Promise.all([
+      const uid = sess.session.user.id;
+      const [s, c, r] = await Promise.all([
         supabase.from("surveys").select("*").not("created_by", "is", null).order("created_at"),
-        supabase.from("survey_completions").select("survey_id").eq("user_id", sess.session.user.id),
+        supabase.from("survey_completions").select("survey_id").eq("user_id", uid),
+        supabase.from("survey_recommendations").select("survey_id,score,reason").eq("user_id", uid),
       ]);
       setSurveys(s.data ?? []);
       setDone(new Set((c.data ?? []).map((x) => x.survey_id)));
+      const map: Record<string, { score: number; reason: string }> = {};
+      (r.data ?? []).forEach((x) => { map[x.survey_id] = { score: x.score, reason: x.reason }; });
+      setScores(map);
       setLoading(false);
     })();
-  }, []);
+  }, [checking]);
 
-  if (loading) return <AppLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;
+  if (checking || loading) return <AppLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;
 
-  const available = surveys.filter((s) => !done.has(s.id));
+  const available = surveys
+    .filter((s) => !done.has(s.id))
+    .sort((a, b) => (scores[b.id]?.score ?? -1) - (scores[a.id]?.score ?? -1));
   const completed = surveys.filter((s) => done.has(s.id));
 
   return (
