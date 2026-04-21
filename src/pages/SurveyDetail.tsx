@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Coins, ArrowLeft, CheckCircle2, ExternalLink, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { awardCoins } from "@/lib/coins";
@@ -267,32 +268,46 @@ const SurveyDetail = () => {
               </p>
             )}
             <div className="mt-6 space-y-5">
-              {activeQuestions.map((q, i) => (
-                <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-card">
-                  <p className="font-display font-semibold text-foreground">
-                    <span className="mr-2 text-primary">{i + 1}.</span>{q.q}
-                  </p>
-                  <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {q.options.map((opt) => {
-                      const selected = answers[i] === opt;
-                      return (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => setAnswers((a) => ({ ...a, [i]: opt }))}
-                          className={`rounded-xl border px-4 py-3 text-left text-sm transition ${
-                            selected
-                              ? "border-primary bg-primary/10 text-foreground shadow-sm"
-                              : "border-border bg-background hover:border-primary/40"
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      );
-                    })}
+              {activeQuestions.map((q, i) => {
+                const isOpen = isScreener && (q as ScreenerQuestion).type === "open";
+                return (
+                  <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-card">
+                    <p className="font-display font-semibold text-foreground">
+                      <span className="mr-2 text-primary">{i + 1}.</span>{q.q}
+                    </p>
+                    {isOpen ? (
+                      <Textarea
+                        className="mt-4"
+                        rows={3}
+                        maxLength={500}
+                        placeholder="Type your answer..."
+                        value={answers[i] ?? ""}
+                        onChange={(e) => setAnswers((a) => ({ ...a, [i]: e.target.value }))}
+                      />
+                    ) : (
+                      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {(q.options ?? []).map((opt) => {
+                          const selected = answers[i] === opt;
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => setAnswers((a) => ({ ...a, [i]: opt }))}
+                              className={`rounded-xl border px-4 py-3 text-left text-sm transition ${
+                                selected
+                                  ? "border-primary bg-primary/10 text-foreground shadow-sm"
+                                  : "border-border bg-background hover:border-primary/40"
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <Button
