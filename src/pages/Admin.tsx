@@ -69,6 +69,7 @@ const emptySurvey = {
   questions: [{ q: "", options: ["", ""] }],
   external_url: "",
   screener_questions: [{ q: "", type: "choice", options: ["", ""], correct: 0 }],
+  target_audience: "",
 };
 
 const SurveysAdmin = () => {
