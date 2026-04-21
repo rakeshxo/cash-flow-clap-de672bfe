@@ -11,6 +11,7 @@ import { useBackgroundGate } from "@/hooks/useBackgroundGate";
 const DAILY_GOAL = 50;
 
 const Dashboard = () => {
+  const { checking } = useBackgroundGate();
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [balance, setBalance] = useState(0);
@@ -20,6 +21,8 @@ const Dashboard = () => {
   const [pollVoted, setPollVoted] = useState(false);
   const [surveyCount, setSurveyCount] = useState(0);
   const [videoCount, setVideoCount] = useState(0);
+  const [recommended, setRecommended] = useState<any[]>([]);
+  const [recsLoading, setRecsLoading] = useState(false);
 
   useEffect(() => {
     if (checking) return;
@@ -81,8 +84,51 @@ const Dashboard = () => {
         setPollVoted(!!v.data);
       }
       setLoading(false);
+
+      // Load (and possibly generate) recommendations
+      const { data: recs } = await supabase
+        .from("survey_recommendations")
+        .select("survey_id,score,reason")
+        .eq("user_id", uid)
+        .order("score", { ascending: false })
+        .limit(5);
+      if (!recs || recs.length === 0) {
+        setRecsLoading(true);
+        try {
+          await supabase.functions.invoke("recommend-surveys");
+          const { data: fresh } = await supabase
+            .from("survey_recommendations")
+            .select("survey_id,score,reason")
+            .eq("user_id", uid)
+            .order("score", { ascending: false })
+            .limit(5);
+          await loadRecommendedSurveys(fresh ?? []);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setRecsLoading(false);
+        }
+      } else {
+        await loadRecommendedSurveys(recs);
+      }
     })();
-  }, []);
+
+    async function loadRecommendedSurveys(recs: { survey_id: string; score: number; reason: string }[]) {
+      if (recs.length === 0) { setRecommended([]); return; }
+      const ids = recs.map((r) => r.survey_id);
+      const { data: surveys } = await supabase
+        .from("surveys")
+        .select("id,title,description,category,reward_cents,estimated_minutes")
+        .in("id", ids);
+      const merged = recs
+        .map((r) => {
+          const s = surveys?.find((x) => x.id === r.survey_id);
+          return s ? { ...s, score: r.score, reason: r.reason } : null;
+        })
+        .filter(Boolean);
+      setRecommended(merged as any[]);
+    }
+  }, [checking]);
 
   const votePoll = async (idx: number) => {
     const { data: sess } = await supabase.auth.getSession();
