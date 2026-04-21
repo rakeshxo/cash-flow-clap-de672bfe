@@ -501,6 +501,7 @@ export type Database = {
           questions: Json
           reward_cents: number
           screener_questions: Json
+          target_audience: string
           title: string
         }
         Insert: {
@@ -514,6 +515,7 @@ export type Database = {
           questions?: Json
           reward_cents?: number
           screener_questions?: Json
+          target_audience?: string
           title: string
         }
         Update: {
@@ -527,6 +529,7 @@ export type Database = {
           questions?: Json
           reward_cents?: number
           screener_questions?: Json
+          target_audience?: string
           title?: string
         }
         Relationships: []
