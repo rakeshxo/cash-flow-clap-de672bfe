@@ -206,36 +206,78 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age_range: string | null
           avatar_url: string | null
+          background_completed: boolean
+          background_updated_at: string | null
+          country: string | null
           created_at: string
           daily_streak: number
           display_name: string | null
+          education: string | null
+          employment_status: string | null
+          gender: string | null
+          has_kids: boolean | null
           id: string
+          income_range: string | null
+          industry: string | null
+          interests: string[] | null
+          job_title: string | null
           last_active_date: string | null
+          marital_status: string | null
           referral_code: string | null
           referred_by: string | null
+          shopping_habits: string[] | null
           user_id: string
         }
         Insert: {
+          age_range?: string | null
           avatar_url?: string | null
+          background_completed?: boolean
+          background_updated_at?: string | null
+          country?: string | null
           created_at?: string
           daily_streak?: number
           display_name?: string | null
+          education?: string | null
+          employment_status?: string | null
+          gender?: string | null
+          has_kids?: boolean | null
           id?: string
+          income_range?: string | null
+          industry?: string | null
+          interests?: string[] | null
+          job_title?: string | null
           last_active_date?: string | null
+          marital_status?: string | null
           referral_code?: string | null
           referred_by?: string | null
+          shopping_habits?: string[] | null
           user_id: string
         }
         Update: {
+          age_range?: string | null
           avatar_url?: string | null
+          background_completed?: boolean
+          background_updated_at?: string | null
+          country?: string | null
           created_at?: string
           daily_streak?: number
           display_name?: string | null
+          education?: string | null
+          employment_status?: string | null
+          gender?: string | null
+          has_kids?: boolean | null
           id?: string
+          income_range?: string | null
+          industry?: string | null
+          interests?: string[] | null
+          job_title?: string | null
           last_active_date?: string | null
+          marital_status?: string | null
           referral_code?: string | null
           referred_by?: string | null
+          shopping_habits?: string[] | null
           user_id?: string
         }
         Relationships: []
@@ -419,6 +461,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      survey_recommendations: {
+        Row: {
+          generated_at: string
+          id: string
+          reason: string
+          score: number
+          survey_id: string
+          user_id: string
+        }
+        Insert: {
+          generated_at?: string
+          id?: string
+          reason?: string
+          score?: number
+          survey_id: string
+          user_id: string
+        }
+        Update: {
+          generated_at?: string
+          id?: string
+          reason?: string
+          score?: number
+          survey_id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       surveys: {
         Row: {
