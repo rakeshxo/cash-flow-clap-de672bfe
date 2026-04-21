@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { awardCoins } from "@/lib/coins";
 
 type Question = { q: string; options: string[] };
-type ScreenerQuestion = { q: string; options: string[]; correct: number };
+type ScreenerQuestion = { q: string; type?: "choice" | "open"; options?: string[]; correct?: number };
 type Survey = {
   id: string;
   title: string;
@@ -133,11 +133,18 @@ const SurveyDetail = () => {
   const submitScreener = async () => {
     if (!survey || !userId) return;
     const sq = survey.screener_questions ?? [];
-    if (Object.keys(answers).length < sq.length) {
+    const allAnswered = sq.every((_, i) => {
+      const v = answers[i];
+      return typeof v === "string" && v.trim().length > 0;
+    });
+    if (!allAnswered) {
       toast.error("Please answer all screener questions");
       return;
     }
-    const passed = sq.every((q, i) => q.options[q.correct] === answers[i]);
+    const passed = sq.every((q, i) => {
+      if ((q.type ?? "choice") === "open") return true; // open answers always pass
+      return q.options?.[q.correct ?? 0] === answers[i];
+    });
     if (!passed) {
       setStage("screener_failed");
       return;
