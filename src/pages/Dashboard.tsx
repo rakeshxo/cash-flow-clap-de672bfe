@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Coins, Sparkles, PlayCircle, Wallet, Flame, Target, Vote } from "lucide-react";
+import { Coins, Sparkles, PlayCircle, Wallet, Flame, Target, Vote, Wand2 } from "lucide-react";
 import { awardCoins, coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { toast } from "sonner";
+import { useBackgroundGate } from "@/hooks/useBackgroundGate";
 
 const DAILY_GOAL = 50;
 
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const [videoCount, setVideoCount] = useState(0);
 
   useEffect(() => {
+    if (checking) return;
     (async () => {
       const { data: sess } = await supabase.auth.getSession();
       if (!sess.session) return;
