@@ -13,6 +13,7 @@ import Withdraw from "./pages/Withdraw.tsx";
 import Profile from "./pages/Profile.tsx";
 import Activity from "./pages/Activity.tsx";
 import Admin from "./pages/Admin.tsx";
+import Onboarding from "./pages/Onboarding.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/activity" element={<Activity />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/survey/:id" element={<SurveyDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

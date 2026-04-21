@@ -3,13 +3,15 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Coins, Sparkles, PlayCircle, Wallet, Flame, Target, Vote } from "lucide-react";
+import { Coins, Sparkles, PlayCircle, Wallet, Flame, Target, Vote, Wand2 } from "lucide-react";
 import { awardCoins, coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { toast } from "sonner";
+import { useBackgroundGate } from "@/hooks/useBackgroundGate";
 
 const DAILY_GOAL = 50;
 
 const Dashboard = () => {
+  const { checking } = useBackgroundGate();
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [balance, setBalance] = useState(0);
@@ -19,8 +21,11 @@ const Dashboard = () => {
   const [pollVoted, setPollVoted] = useState(false);
   const [surveyCount, setSurveyCount] = useState(0);
   const [videoCount, setVideoCount] = useState(0);
+  const [recommended, setRecommended] = useState<any[]>([]);
+  const [recsLoading, setRecsLoading] = useState(false);
 
   useEffect(() => {
+    if (checking) return;
     (async () => {
       const { data: sess } = await supabase.auth.getSession();
       if (!sess.session) return;
@@ -79,8 +84,51 @@ const Dashboard = () => {
         setPollVoted(!!v.data);
       }
       setLoading(false);
+
+      // Load (and possibly generate) recommendations
+      const { data: recs } = await supabase
+        .from("survey_recommendations")
+        .select("survey_id,score,reason")
+        .eq("user_id", uid)
+        .order("score", { ascending: false })
+        .limit(5);
+      if (!recs || recs.length === 0) {
+        setRecsLoading(true);
+        try {
+          await supabase.functions.invoke("recommend-surveys");
+          const { data: fresh } = await supabase
+            .from("survey_recommendations")
+            .select("survey_id,score,reason")
+            .eq("user_id", uid)
+            .order("score", { ascending: false })
+            .limit(5);
+          await loadRecommendedSurveys(fresh ?? []);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setRecsLoading(false);
+        }
+      } else {
+        await loadRecommendedSurveys(recs);
+      }
     })();
-  }, []);
+
+    async function loadRecommendedSurveys(recs: { survey_id: string; score: number; reason: string }[]) {
+      if (recs.length === 0) { setRecommended([]); return; }
+      const ids = recs.map((r) => r.survey_id);
+      const { data: surveys } = await supabase
+        .from("surveys")
+        .select("id,title,description,category,reward_cents,estimated_minutes")
+        .in("id", ids);
+      const merged = recs
+        .map((r) => {
+          const s = surveys?.find((x) => x.id === r.survey_id);
+          return s ? { ...s, score: r.score, reason: r.reason } : null;
+        })
+        .filter(Boolean);
+      setRecommended(merged as any[]);
+    }
+  }, [checking]);
 
   const votePoll = async (idx: number) => {
     const { data: sess } = await supabase.auth.getSession();
@@ -97,7 +145,7 @@ const Dashboard = () => {
     toast.success(`+${poll.reward_coins} coins`);
   };
 
-  if (loading) return <AppLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;
+  if (checking || loading) return <AppLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;
 
   const goalPct = Math.min(100, Math.round((todayCoins / DAILY_GOAL) * 100));
 
@@ -141,6 +189,39 @@ const Dashboard = () => {
             ))}
           </div>
           {pollVoted && <p className="mt-3 text-sm text-primary">Thanks for voting! Come back tomorrow.</p>}
+        </section>
+      )}
+
+      {(recommended.length > 0 || recsLoading) && (
+        <section className="mt-10">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-display text-xl font-bold text-foreground">
+              <Wand2 className="h-5 w-5 text-primary" /> Recommended for you
+            </h2>
+            <span className="text-xs text-muted-foreground">Picked by AI from your background</span>
+          </div>
+          {recsLoading ? (
+            <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
+              Finding the best surveys for you…
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {recommended.map((s) => (
+                <Link key={s.id} to={`/survey/${s.id}`} className="group flex flex-col rounded-2xl border border-primary/30 bg-card p-5 shadow-card transition hover:-translate-y-1 hover:shadow-glow">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">{s.category}</span>
+                    <span className="rounded-full bg-gradient-hero px-2.5 py-0.5 text-xs font-bold text-primary-foreground">{s.score}% match</span>
+                  </div>
+                  <h3 className="font-display text-base font-bold text-foreground">{s.title}</h3>
+                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.reason || s.description}</p>
+                  <div className="mt-3 flex items-center justify-between text-sm">
+                    <span className="text-xs text-muted-foreground">{s.estimated_minutes} min</span>
+                    <span className="flex items-center gap-1 font-display font-bold text-primary"><Coins className="h-3.5 w-3.5" /> {s.reward_cents}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
