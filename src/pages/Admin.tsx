@@ -116,6 +116,7 @@ const SurveysAdmin = () => {
       questions: hasExternal ? [] : form.questions,
       external_url: hasExternal ? form.external_url.trim() : null,
       screener_questions: hasExternal ? screener : [],
+      target_audience: (form.target_audience ?? "").trim(),
       created_by: sess.session?.user.id ?? null,
     };
     const { error } = editId
