@@ -139,6 +139,7 @@ const SurveysAdmin = () => {
       screener_questions: Array.isArray(s.screener_questions) && s.screener_questions.length
         ? s.screener_questions
         : [{ q: "", options: ["", ""], correct: 0 }],
+      target_audience: s.target_audience ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
