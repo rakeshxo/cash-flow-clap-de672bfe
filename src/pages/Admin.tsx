@@ -71,6 +71,14 @@ const emptySurvey = {
   external_url: "",
   screener_questions: [{ q: "", type: "choice", options: ["", ""], correct: 0 }],
   target_audience: "",
+  target_age_ranges: [] as string[],
+  target_genders: [] as string[],
+  target_countries: [] as string[],
+  target_employment_statuses: [] as string[],
+  target_marital_statuses: [] as string[],
+  target_education: [] as string[],
+  target_income_ranges: [] as string[],
+  target_has_kids: "any" as "any" | "yes" | "no",
 };
 
 const SurveysAdmin = () => {
