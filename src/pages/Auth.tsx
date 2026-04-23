@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Coins } from "lucide-react";
 import { awardCoins } from "@/lib/coins";
+import logo from "@/assets/logo.png";
 
 const REFERRAL_BONUS = 250;
 
@@ -90,7 +91,7 @@ const Auth = () => {
       <div className="relative w-full max-w-md animate-fade-in">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
           <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-primary/40 bg-background shadow-neon">
-            <img src="/src/assets/logo.png" alt="Survey Paradox" className="h-8 w-8 object-contain" />
+            <img src={logo} alt="Survey Paradox" className="h-8 w-8 object-contain" />
           </span>
           <span className="font-display text-xl font-bold tracking-wider text-foreground">
             SURVEY <span className="text-gradient-neon">PARADOX</span>
