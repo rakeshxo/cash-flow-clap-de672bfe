@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { awardCoins } from "@/lib/coins";
 import { Shield, Plus, Trash2, Pencil, X, Check, ExternalLink } from "lucide-react";
+import { AGE_RANGES, GENDERS, EMPLOYMENT, INCOME, MARITAL, EDUCATION } from "@/lib/surveyTargeting";
 
 const Admin = () => {
   const navigate = useNavigate();
