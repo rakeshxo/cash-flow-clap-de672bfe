@@ -223,17 +223,75 @@ const SurveysAdmin = () => {
             : "In-app mode: users answer the questions below to earn coins instantly."}
         </p>
 
-        <Field label="AI targeting — describe the ideal respondent (optional)">
-          <Textarea
-            rows={3}
-            value={form.target_audience ?? ""}
-            onChange={(e) => setForm({ ...form, target_audience: e.target.value })}
-            placeholder="e.g. Women aged 25–44 in the US, employed full-time in healthcare, household income $50k+, married with kids, interested in skincare and online shopping."
+        <div className="space-y-4 rounded-xl border border-border bg-secondary/30 p-4">
+          <div>
+            <Label className="text-base">Targeting — who should see this survey?</Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Pick the audience for each field. Leave a field empty to allow everyone for that field.
+            </p>
+          </div>
+
+          <ChipGroup
+            label="Age ranges"
+            options={AGE_RANGES}
+            selected={form.target_age_ranges}
+            onChange={(v) => setForm({ ...form, target_age_ranges: v })}
           />
-        </Field>
-        <p className="-mt-2 text-xs text-muted-foreground">
-          Used by the AI to match this survey to the right respondents (demographics, employment, lifestyle, household). The more specific, the better the matches.
-        </p>
+          <ChipGroup
+            label="Genders"
+            options={GENDERS}
+            selected={form.target_genders}
+            onChange={(v) => setForm({ ...form, target_genders: v })}
+          />
+          <CountryInput
+            value={form.target_countries}
+            onChange={(v) => setForm({ ...form, target_countries: v })}
+          />
+          <ChipGroup
+            label="Employment status"
+            options={EMPLOYMENT}
+            selected={form.target_employment_statuses}
+            onChange={(v) => setForm({ ...form, target_employment_statuses: v })}
+          />
+          <ChipGroup
+            label="Income range"
+            options={INCOME}
+            selected={form.target_income_ranges}
+            onChange={(v) => setForm({ ...form, target_income_ranges: v })}
+          />
+          <ChipGroup
+            label="Marital status"
+            options={MARITAL}
+            selected={form.target_marital_statuses}
+            onChange={(v) => setForm({ ...form, target_marital_statuses: v })}
+          />
+          <ChipGroup
+            label="Education"
+            options={EDUCATION}
+            selected={form.target_education}
+            onChange={(v) => setForm({ ...form, target_education: v })}
+          />
+          <div className="space-y-2">
+            <Label>Has children?</Label>
+            <div className="flex gap-2">
+              {[
+                { v: "any", l: "Any" },
+                { v: "yes", l: "Yes" },
+                { v: "no", l: "No" },
+              ].map((o) => (
+                <Button
+                  key={o.v}
+                  type="button"
+                  size="sm"
+                  variant={form.target_has_kids === o.v ? "default" : "outline"}
+                  onClick={() => setForm({ ...form, target_has_kids: o.v })}
+                >
+                  {o.l}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {hasExternal ? (
           <div className="space-y-3">
