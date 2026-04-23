@@ -819,4 +819,74 @@ const Row = ({ title, subtitle, onEdit, onDelete }: any) => (
   </div>
 );
 
+const ChipGroup = ({ label, options, selected, onChange }: { label: string; options: string[]; selected: string[]; onChange: (v: string[]) => void }) => {
+  const toggle = (v: string) => {
+    onChange(selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v]);
+  };
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm">
+        {label}{" "}
+        <span className="text-xs font-normal text-muted-foreground">
+          ({selected.length === 0 ? "any" : `${selected.length} selected`})
+        </span>
+      </Label>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => {
+          const active = selected.includes(o);
+          return (
+            <button
+              key={o}
+              type="button"
+              onClick={() => toggle(o)}
+              className={`rounded-full border px-2.5 py-1 text-xs transition ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:border-primary/50"}`}
+            >
+              {o}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const CountryInput = ({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) => {
+  const [draft, setDraft] = useState("");
+  const add = () => {
+    const v = draft.trim();
+    if (!v) return;
+    if (!value.some((c) => c.toLowerCase() === v.toLowerCase())) onChange([...value, v]);
+    setDraft("");
+  };
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm">
+        Countries{" "}
+        <span className="text-xs font-normal text-muted-foreground">
+          ({value.length === 0 ? "any" : `${value.length} selected`})
+        </span>
+      </Label>
+      <div className="flex gap-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+          placeholder="e.g. United States"
+        />
+        <Button type="button" size="sm" variant="outline" onClick={add}>Add</Button>
+      </div>
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((c) => (
+            <span key={c} className="flex items-center gap-1 rounded-full border border-primary bg-primary px-2.5 py-1 text-xs text-primary-foreground">
+              {c}
+              <button type="button" onClick={() => onChange(value.filter((x) => x !== c))}><X className="h-3 w-3" /></button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default Admin;
