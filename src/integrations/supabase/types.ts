@@ -462,33 +462,6 @@ export type Database = {
           },
         ]
       }
-      survey_recommendations: {
-        Row: {
-          generated_at: string
-          id: string
-          reason: string
-          score: number
-          survey_id: string
-          user_id: string
-        }
-        Insert: {
-          generated_at?: string
-          id?: string
-          reason?: string
-          score?: number
-          survey_id: string
-          user_id: string
-        }
-        Update: {
-          generated_at?: string
-          id?: string
-          reason?: string
-          score?: number
-          survey_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       surveys: {
         Row: {
           category: string
@@ -501,7 +474,15 @@ export type Database = {
           questions: Json
           reward_cents: number
           screener_questions: Json
+          target_age_ranges: string[]
           target_audience: string
+          target_countries: string[]
+          target_education: string[]
+          target_employment_statuses: string[]
+          target_genders: string[]
+          target_has_kids: string
+          target_income_ranges: string[]
+          target_marital_statuses: string[]
           title: string
         }
         Insert: {
@@ -515,7 +496,15 @@ export type Database = {
           questions?: Json
           reward_cents?: number
           screener_questions?: Json
+          target_age_ranges?: string[]
           target_audience?: string
+          target_countries?: string[]
+          target_education?: string[]
+          target_employment_statuses?: string[]
+          target_genders?: string[]
+          target_has_kids?: string
+          target_income_ranges?: string[]
+          target_marital_statuses?: string[]
           title: string
         }
         Update: {
@@ -529,7 +518,15 @@ export type Database = {
           questions?: Json
           reward_cents?: number
           screener_questions?: Json
+          target_age_ranges?: string[]
           target_audience?: string
+          target_countries?: string[]
+          target_education?: string[]
+          target_employment_statuses?: string[]
+          target_genders?: string[]
+          target_has_kids?: string
+          target_income_ranges?: string[]
+          target_marital_statuses?: string[]
           title?: string
         }
         Relationships: []

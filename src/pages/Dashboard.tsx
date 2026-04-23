@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Coins, Sparkles, PlayCircle, Wallet, Flame, Target, Vote, Wand2 } from "lucide-react";
+import { Coins, Sparkles, PlayCircle, Wallet, Flame, Target, Vote } from "lucide-react";
 import { awardCoins, coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { toast } from "sonner";
 import { useBackgroundGate } from "@/hooks/useBackgroundGate";
+import { matchesProfile, type ProfileLite } from "@/lib/surveyTargeting";
 
 const DAILY_GOAL = 50;
 
@@ -22,7 +23,6 @@ const Dashboard = () => {
   const [surveyCount, setSurveyCount] = useState(0);
   const [videoCount, setVideoCount] = useState(0);
   const [recommended, setRecommended] = useState<any[]>([]);
-  const [recsLoading, setRecsLoading] = useState(false);
 
   useEffect(() => {
     if (checking) return;
@@ -34,16 +34,17 @@ const Dashboard = () => {
       const today = new Date();
       const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
 
-      const [profileR, txR, todayR, pollR, surveysR, videosR] = await Promise.all([
-        supabase.from("profiles").select("display_name,daily_streak,last_active_date").eq("user_id", uid).maybeSingle(),
+      const [profileR, txR, todayR, pollR, surveysR, videosR, doneR] = await Promise.all([
+        supabase.from("profiles").select("display_name,daily_streak,last_active_date,age_range,gender,country,employment_status,income_range,marital_status,has_kids,education").eq("user_id", uid).maybeSingle(),
         supabase.from("coin_transactions").select("amount").eq("user_id", uid),
         supabase.from("coin_transactions").select("amount").eq("user_id", uid).gte("created_at", start),
         supabase.from("daily_polls").select("*").eq("poll_date", today.toISOString().slice(0, 10)).maybeSingle(),
-        supabase.from("surveys").select("id").not("created_by", "is", null),
+        supabase.from("surveys").select("id,title,description,category,reward_cents,estimated_minutes,target_age_ranges,target_genders,target_countries,target_employment_statuses,target_marital_statuses,target_education,target_income_ranges,target_has_kids").not("created_by", "is", null),
         supabase.from("videos").select("id"),
+        supabase.from("survey_completions").select("survey_id").eq("user_id", uid),
       ]);
 
-      const profile = profileR.data;
+      const profile = profileR.data as (ProfileLite & { display_name?: string | null; daily_streak?: number; last_active_date?: string | null }) | null;
       const bal = (txR.data ?? []).reduce((s, r) => s + (r.amount ?? 0), 0);
       const todayBal = (todayR.data ?? []).reduce((s, r) => s + (r.amount ?? 0), 0);
 
@@ -57,7 +58,6 @@ const Dashboard = () => {
           daily_streak: newStreak,
           last_active_date: today.toISOString().slice(0, 10),
         }).eq("user_id", uid);
-        // Streak bonus
         if (newStreak > 1) {
           await awardCoins({
             userId: uid,
@@ -76,7 +76,15 @@ const Dashboard = () => {
       setBalance(await getBalance(uid));
       setTodayCoins(todayBal);
       setPoll(pollR.data);
-      setSurveyCount(surveysR.data?.length ?? 0);
+
+      const allSurveys = surveysR.data ?? [];
+      const doneIds = new Set((doneR.data ?? []).map((x: any) => x.survey_id));
+
+      // Filter by demographic targeting and exclude completed
+      const matched = allSurveys.filter((s: any) => !doneIds.has(s.id) && matchesProfile(s, profile));
+      setSurveyCount(matched.length);
+      setRecommended(matched.slice(0, 6));
+
       setVideoCount(videosR.data?.length ?? 0);
 
       if (pollR.data) {
@@ -84,50 +92,7 @@ const Dashboard = () => {
         setPollVoted(!!v.data);
       }
       setLoading(false);
-
-      // Load (and possibly generate) recommendations
-      const { data: recs } = await supabase
-        .from("survey_recommendations")
-        .select("survey_id,score,reason")
-        .eq("user_id", uid)
-        .order("score", { ascending: false })
-        .limit(5);
-      if (!recs || recs.length === 0) {
-        setRecsLoading(true);
-        try {
-          await supabase.functions.invoke("recommend-surveys");
-          const { data: fresh } = await supabase
-            .from("survey_recommendations")
-            .select("survey_id,score,reason")
-            .eq("user_id", uid)
-            .order("score", { ascending: false })
-            .limit(5);
-          await loadRecommendedSurveys(fresh ?? []);
-        } catch (e) {
-          console.error(e);
-        } finally {
-          setRecsLoading(false);
-        }
-      } else {
-        await loadRecommendedSurveys(recs);
-      }
     })();
-
-    async function loadRecommendedSurveys(recs: { survey_id: string; score: number; reason: string }[]) {
-      if (recs.length === 0) { setRecommended([]); return; }
-      const ids = recs.map((r) => r.survey_id);
-      const { data: surveys } = await supabase
-        .from("surveys")
-        .select("id,title,description,category,reward_cents,estimated_minutes")
-        .in("id", ids);
-      const merged = recs
-        .map((r) => {
-          const s = surveys?.find((x) => x.id === r.survey_id);
-          return s ? { ...s, score: r.score, reason: r.reason } : null;
-        })
-        .filter(Boolean);
-      setRecommended(merged as any[]);
-    }
   }, [checking]);
 
   const votePoll = async (idx: number) => {
@@ -192,36 +157,30 @@ const Dashboard = () => {
         </section>
       )}
 
-      {(recommended.length > 0 || recsLoading) && (
+      {recommended.length > 0 && (
         <section className="mt-10">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="flex items-center gap-2 font-display text-xl font-bold text-foreground">
-              <Wand2 className="h-5 w-5 text-primary" /> Recommended for you
+              <Sparkles className="h-5 w-5 text-primary" /> Recommended for you
             </h2>
-            <span className="text-xs text-muted-foreground">Picked by AI from your background</span>
+            <span className="text-xs text-muted-foreground">Matched to your background</span>
           </div>
-          {recsLoading ? (
-            <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-              Finding the best surveys for you…
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {recommended.map((s) => (
-                <Link key={s.id} to={`/survey/${s.id}`} className="group flex flex-col rounded-2xl border border-primary/30 bg-card p-5 shadow-card transition hover:-translate-y-1 hover:shadow-glow">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">{s.category}</span>
-                    <span className="rounded-full bg-gradient-hero px-2.5 py-0.5 text-xs font-bold text-primary-foreground">{s.score}% match</span>
-                  </div>
-                  <h3 className="font-display text-base font-bold text-foreground">{s.title}</h3>
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.reason || s.description}</p>
-                  <div className="mt-3 flex items-center justify-between text-sm">
-                    <span className="text-xs text-muted-foreground">{s.estimated_minutes} min</span>
-                    <span className="flex items-center gap-1 font-display font-bold text-primary"><Coins className="h-3.5 w-3.5" /> {s.reward_cents}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {recommended.map((s) => (
+              <Link key={s.id} to={`/survey/${s.id}`} className="group flex flex-col rounded-2xl border border-primary/30 bg-card p-5 shadow-card transition hover:-translate-y-1 hover:shadow-glow">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">{s.category}</span>
+                  <span className="rounded-full bg-gradient-hero px-2.5 py-0.5 text-xs font-bold text-primary-foreground">Match</span>
+                </div>
+                <h3 className="font-display text-base font-bold text-foreground">{s.title}</h3>
+                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.description}</p>
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <span className="text-xs text-muted-foreground">{s.estimated_minutes} min</span>
+                  <span className="flex items-center gap-1 font-display font-bold text-primary"><Coins className="h-3.5 w-3.5" /> {s.reward_cents}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </section>
       )}
 

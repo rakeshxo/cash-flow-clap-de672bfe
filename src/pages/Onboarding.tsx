@@ -97,9 +97,6 @@ const Onboarding = () => {
       }).eq("user_id", uid);
       if (error) throw error;
 
-      // Trigger AI recommendations (fire-and-forget; user goes to dashboard)
-      supabase.functions.invoke("recommend-surveys").catch((e) => console.error("rec error", e));
-
       toast.success("Profile saved! Finding surveys for you...");
       navigate("/dashboard", { replace: true });
     } catch (e: any) {

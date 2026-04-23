@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { awardCoins } from "@/lib/coins";
 import { Shield, Plus, Trash2, Pencil, X, Check, ExternalLink } from "lucide-react";
+import { AGE_RANGES, GENDERS, EMPLOYMENT, INCOME, MARITAL, EDUCATION } from "@/lib/surveyTargeting";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -70,6 +71,14 @@ const emptySurvey = {
   external_url: "",
   screener_questions: [{ q: "", type: "choice", options: ["", ""], correct: 0 }],
   target_audience: "",
+  target_age_ranges: [] as string[],
+  target_genders: [] as string[],
+  target_countries: [] as string[],
+  target_employment_statuses: [] as string[],
+  target_marital_statuses: [] as string[],
+  target_education: [] as string[],
+  target_income_ranges: [] as string[],
+  target_has_kids: "any" as "any" | "yes" | "no",
 };
 
 const SurveysAdmin = () => {
@@ -117,6 +126,14 @@ const SurveysAdmin = () => {
       external_url: hasExternal ? form.external_url.trim() : null,
       screener_questions: hasExternal ? screener : [],
       target_audience: (form.target_audience ?? "").trim(),
+      target_age_ranges: form.target_age_ranges ?? [],
+      target_genders: form.target_genders ?? [],
+      target_countries: (form.target_countries ?? []).map((c: string) => c.trim()).filter(Boolean),
+      target_employment_statuses: form.target_employment_statuses ?? [],
+      target_marital_statuses: form.target_marital_statuses ?? [],
+      target_education: form.target_education ?? [],
+      target_income_ranges: form.target_income_ranges ?? [],
+      target_has_kids: form.target_has_kids ?? "any",
       created_by: sess.session?.user.id ?? null,
     };
     const { error } = editId
@@ -140,6 +157,14 @@ const SurveysAdmin = () => {
         ? s.screener_questions
         : [{ q: "", options: ["", ""], correct: 0 }],
       target_audience: s.target_audience ?? "",
+      target_age_ranges: s.target_age_ranges ?? [],
+      target_genders: s.target_genders ?? [],
+      target_countries: s.target_countries ?? [],
+      target_employment_statuses: s.target_employment_statuses ?? [],
+      target_marital_statuses: s.target_marital_statuses ?? [],
+      target_education: s.target_education ?? [],
+      target_income_ranges: s.target_income_ranges ?? [],
+      target_has_kids: s.target_has_kids ?? "any",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -198,17 +223,75 @@ const SurveysAdmin = () => {
             : "In-app mode: users answer the questions below to earn coins instantly."}
         </p>
 
-        <Field label="AI targeting — describe the ideal respondent (optional)">
-          <Textarea
-            rows={3}
-            value={form.target_audience ?? ""}
-            onChange={(e) => setForm({ ...form, target_audience: e.target.value })}
-            placeholder="e.g. Women aged 25–44 in the US, employed full-time in healthcare, household income $50k+, married with kids, interested in skincare and online shopping."
+        <div className="space-y-4 rounded-xl border border-border bg-secondary/30 p-4">
+          <div>
+            <Label className="text-base">Targeting — who should see this survey?</Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Pick the audience for each field. Leave a field empty to allow everyone for that field.
+            </p>
+          </div>
+
+          <ChipGroup
+            label="Age ranges"
+            options={AGE_RANGES}
+            selected={form.target_age_ranges}
+            onChange={(v) => setForm({ ...form, target_age_ranges: v })}
           />
-        </Field>
-        <p className="-mt-2 text-xs text-muted-foreground">
-          Used by the AI to match this survey to the right respondents (demographics, employment, lifestyle, household). The more specific, the better the matches.
-        </p>
+          <ChipGroup
+            label="Genders"
+            options={GENDERS}
+            selected={form.target_genders}
+            onChange={(v) => setForm({ ...form, target_genders: v })}
+          />
+          <CountryInput
+            value={form.target_countries}
+            onChange={(v) => setForm({ ...form, target_countries: v })}
+          />
+          <ChipGroup
+            label="Employment status"
+            options={EMPLOYMENT}
+            selected={form.target_employment_statuses}
+            onChange={(v) => setForm({ ...form, target_employment_statuses: v })}
+          />
+          <ChipGroup
+            label="Income range"
+            options={INCOME}
+            selected={form.target_income_ranges}
+            onChange={(v) => setForm({ ...form, target_income_ranges: v })}
+          />
+          <ChipGroup
+            label="Marital status"
+            options={MARITAL}
+            selected={form.target_marital_statuses}
+            onChange={(v) => setForm({ ...form, target_marital_statuses: v })}
+          />
+          <ChipGroup
+            label="Education"
+            options={EDUCATION}
+            selected={form.target_education}
+            onChange={(v) => setForm({ ...form, target_education: v })}
+          />
+          <div className="space-y-2">
+            <Label>Has children?</Label>
+            <div className="flex gap-2">
+              {[
+                { v: "any", l: "Any" },
+                { v: "yes", l: "Yes" },
+                { v: "no", l: "No" },
+              ].map((o) => (
+                <Button
+                  key={o.v}
+                  type="button"
+                  size="sm"
+                  variant={form.target_has_kids === o.v ? "default" : "outline"}
+                  onClick={() => setForm({ ...form, target_has_kids: o.v })}
+                >
+                  {o.l}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {hasExternal ? (
           <div className="space-y-3">
@@ -735,5 +818,75 @@ const Row = ({ title, subtitle, onEdit, onDelete }: any) => (
     <Button size="icon" variant="ghost" onClick={onDelete}><Trash2 className="h-4 w-4 text-destructive" /></Button>
   </div>
 );
+
+const ChipGroup = ({ label, options, selected, onChange }: { label: string; options: string[]; selected: string[]; onChange: (v: string[]) => void }) => {
+  const toggle = (v: string) => {
+    onChange(selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v]);
+  };
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm">
+        {label}{" "}
+        <span className="text-xs font-normal text-muted-foreground">
+          ({selected.length === 0 ? "any" : `${selected.length} selected`})
+        </span>
+      </Label>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => {
+          const active = selected.includes(o);
+          return (
+            <button
+              key={o}
+              type="button"
+              onClick={() => toggle(o)}
+              className={`rounded-full border px-2.5 py-1 text-xs transition ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:border-primary/50"}`}
+            >
+              {o}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const CountryInput = ({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) => {
+  const [draft, setDraft] = useState("");
+  const add = () => {
+    const v = draft.trim();
+    if (!v) return;
+    if (!value.some((c) => c.toLowerCase() === v.toLowerCase())) onChange([...value, v]);
+    setDraft("");
+  };
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm">
+        Countries{" "}
+        <span className="text-xs font-normal text-muted-foreground">
+          ({value.length === 0 ? "any" : `${value.length} selected`})
+        </span>
+      </Label>
+      <div className="flex gap-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+          placeholder="e.g. United States"
+        />
+        <Button type="button" size="sm" variant="outline" onClick={add}>Add</Button>
+      </div>
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((c) => (
+            <span key={c} className="flex items-center gap-1 rounded-full border border-primary bg-primary px-2.5 py-1 text-xs text-primary-foreground">
+              {c}
+              <button type="button" onClick={() => onChange(value.filter((x) => x !== c))}><X className="h-3 w-3" /></button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default Admin;
