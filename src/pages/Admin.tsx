@@ -126,6 +126,14 @@ const SurveysAdmin = () => {
       external_url: hasExternal ? form.external_url.trim() : null,
       screener_questions: hasExternal ? screener : [],
       target_audience: (form.target_audience ?? "").trim(),
+      target_age_ranges: form.target_age_ranges ?? [],
+      target_genders: form.target_genders ?? [],
+      target_countries: (form.target_countries ?? []).map((c: string) => c.trim()).filter(Boolean),
+      target_employment_statuses: form.target_employment_statuses ?? [],
+      target_marital_statuses: form.target_marital_statuses ?? [],
+      target_education: form.target_education ?? [],
+      target_income_ranges: form.target_income_ranges ?? [],
+      target_has_kids: form.target_has_kids ?? "any",
       created_by: sess.session?.user.id ?? null,
     };
     const { error } = editId
