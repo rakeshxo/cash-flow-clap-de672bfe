@@ -84,16 +84,20 @@ const Auth = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-soft p-4 font-sans">
-      <div className="w-full max-w-md">
-        <Link to="/" className="mb-6 flex items-center justify-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-hero shadow-glow">
-            <Coins className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="font-display text-xl font-bold text-foreground">PollPay</span>
+    <div className="relative flex min-h-screen items-center justify-center p-4 font-sans">
+      <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute bottom-0 right-0 h-[24rem] w-[24rem] rounded-full bg-accent/15 blur-3xl" />
+      <div className="relative w-full max-w-md animate-fade-in">
+        <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
+          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-primary/40 bg-background shadow-neon">
+            <img src="/src/assets/logo.png" alt="Survey Paradox" className="h-8 w-8 object-contain" />
+          </span>
+          <span className="font-display text-xl font-bold tracking-wider text-foreground">
+            SURVEY <span className="text-gradient-neon">PARADOX</span>
+          </span>
         </Link>
 
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-card">
+        <div className="glass-panel rounded-xl p-8 shadow-card border-neon">
           <h1 className="font-display text-2xl font-bold text-foreground">
             {mode === "signin" ? "Welcome back" : "Create your account"}
           </h1>
