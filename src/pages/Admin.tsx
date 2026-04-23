@@ -157,6 +157,14 @@ const SurveysAdmin = () => {
         ? s.screener_questions
         : [{ q: "", options: ["", ""], correct: 0 }],
       target_audience: s.target_audience ?? "",
+      target_age_ranges: s.target_age_ranges ?? [],
+      target_genders: s.target_genders ?? [],
+      target_countries: s.target_countries ?? [],
+      target_employment_statuses: s.target_employment_statuses ?? [],
+      target_marital_statuses: s.target_marital_statuses ?? [],
+      target_education: s.target_education ?? [],
+      target_income_ranges: s.target_income_ranges ?? [],
+      target_has_kids: s.target_has_kids ?? "any",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
