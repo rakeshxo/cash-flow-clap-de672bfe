@@ -462,33 +462,6 @@ export type Database = {
           },
         ]
       }
-      survey_recommendations: {
-        Row: {
-          generated_at: string
-          id: string
-          reason: string
-          score: number
-          survey_id: string
-          user_id: string
-        }
-        Insert: {
-          generated_at?: string
-          id?: string
-          reason?: string
-          score?: number
-          survey_id: string
-          user_id: string
-        }
-        Update: {
-          generated_at?: string
-          id?: string
-          reason?: string
-          score?: number
-          survey_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       surveys: {
         Row: {
           category: string
