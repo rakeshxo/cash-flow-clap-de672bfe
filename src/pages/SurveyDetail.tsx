@@ -203,6 +203,24 @@ const SurveyDetail = () => {
 
   // Submitted for admin review
   if (stage === "submitted") {
+    if (claimStatus === "approved") {
+      return (
+        <CenteredCard
+          icon={<CheckCircle2 className="h-8 w-8 text-primary-foreground" />}
+          title="Approved ✅"
+          body={<>Your submission was approved! You earned <span className="font-bold text-primary">+{survey.reward_cents} coins</span>.</>}
+        />
+      );
+    }
+    if (claimStatus === "rejected") {
+      return (
+        <CenteredCard
+          icon={<ExternalLink className="h-8 w-8 text-primary-foreground" />}
+          title="Rejected ❌"
+          body="Unfortunately, your submission was not approved by the admin."
+        />
+      );
+    }
     return (
       <CenteredCard
         icon={<Clock className="h-8 w-8 text-primary-foreground" />}
