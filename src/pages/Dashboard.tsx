@@ -80,9 +80,10 @@ const Dashboard = () => {
 
       const allSurveys = surveysR.data ?? [];
       const doneIds = new Set((doneR.data ?? []).map((x: any) => x.survey_id));
+      const claimedIds = new Set((claimsR.data ?? []).map((x: any) => x.survey_id));
 
-      // Filter by demographic targeting and exclude completed
-      const matched = allSurveys.filter((s: any) => !doneIds.has(s.id) && matchesProfile(s, profile));
+      // Filter by demographic targeting and exclude completed + claimed
+      const matched = allSurveys.filter((s: any) => !doneIds.has(s.id) && !claimedIds.has(s.id) && matchesProfile(s, profile));
       setSurveyCount(matched.length);
       setRecommended(matched.slice(0, 6));
 
