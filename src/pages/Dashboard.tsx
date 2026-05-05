@@ -34,7 +34,7 @@ const Dashboard = () => {
       const today = new Date();
       const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
 
-      const [profileR, txR, todayR, pollR, surveysR, videosR, doneR] = await Promise.all([
+      const [profileR, txR, todayR, pollR, surveysR, videosR, doneR, claimsR] = await Promise.all([
         supabase.from("profiles").select("display_name,daily_streak,last_active_date,age_range,gender,country,employment_status,income_range,marital_status,has_kids,education").eq("user_id", uid).maybeSingle(),
         supabase.from("coin_transactions").select("amount").eq("user_id", uid),
         supabase.from("coin_transactions").select("amount").eq("user_id", uid).gte("created_at", start),
@@ -42,6 +42,7 @@ const Dashboard = () => {
         supabase.from("surveys").select("id,title,description,category,reward_cents,estimated_minutes,target_age_ranges,target_genders,target_countries,target_employment_statuses,target_marital_statuses,target_education,target_income_ranges,target_has_kids").not("created_by", "is", null),
         supabase.from("videos").select("id"),
         supabase.from("survey_completions").select("survey_id").eq("user_id", uid),
+        supabase.from("survey_claims").select("survey_id").eq("user_id", uid),
       ]);
 
       const profile = profileR.data as (ProfileLite & { display_name?: string | null; daily_streak?: number; last_active_date?: string | null }) | null;
@@ -79,9 +80,10 @@ const Dashboard = () => {
 
       const allSurveys = surveysR.data ?? [];
       const doneIds = new Set((doneR.data ?? []).map((x: any) => x.survey_id));
+      const claimedIds = new Set((claimsR.data ?? []).map((x: any) => x.survey_id));
 
-      // Filter by demographic targeting and exclude completed
-      const matched = allSurveys.filter((s: any) => !doneIds.has(s.id) && matchesProfile(s, profile));
+      // Filter by demographic targeting and exclude completed + claimed
+      const matched = allSurveys.filter((s: any) => !doneIds.has(s.id) && !claimedIds.has(s.id) && matchesProfile(s, profile));
       setSurveyCount(matched.length);
       setRecommended(matched.slice(0, 6));
 

@@ -111,5 +111,12 @@ Deno.serve(async (req) => {
     terminate: "You didn't qualify for this survey based on your answers.",
     security: "This response was flagged. No coins were awarded.",
   };
-  return respond("Not eligible", reasons[statusParam] ?? "No coins awarded.", "#a78bfa");
+  const reason = reasons[statusParam] ?? "No coins awarded.";
+  await supabase.from("notifications").insert({
+    user_id: claim.user_id,
+    title: "Survey rejected",
+    body: reason,
+    icon: "bell",
+  });
+  return respond("Not eligible", reason, "#a78bfa");
 });
