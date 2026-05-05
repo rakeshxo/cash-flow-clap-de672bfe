@@ -84,11 +84,11 @@ const SurveyDetail = () => {
           .limit(1)
           .maybeSingle();
         if (existing) {
-          // If a previous claim exists, reuse its UID and short-circuit to "submitted"
           setTrackingUid(existing.tracking_uid ?? null);
           if (existing.tracking_uid) {
             setExternalUrl(buildSurveyUrl(survey.external_url, existing.tracking_uid));
           }
+          setClaimStatus(existing.status);
           setStage("submitted");
           return;
         }
