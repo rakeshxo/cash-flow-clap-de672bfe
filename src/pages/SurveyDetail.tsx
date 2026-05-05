@@ -54,6 +54,7 @@ const SurveyDetail = () => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [stage, setStage] = useState<Stage>("loading");
+  const [claimStatus, setClaimStatus] = useState<string>("pending");
   const [userId, setUserId] = useState<string | null>(null);
   const [trackingUid, setTrackingUid] = useState<string | null>(null);
   const [externalUrl, setExternalUrl] = useState<string | null>(null);
@@ -84,11 +85,11 @@ const SurveyDetail = () => {
           .limit(1)
           .maybeSingle();
         if (existing) {
-          // If a previous claim exists, reuse its UID and short-circuit to "submitted"
           setTrackingUid(existing.tracking_uid ?? null);
           if (existing.tracking_uid) {
             setExternalUrl(buildSurveyUrl(survey.external_url, existing.tracking_uid));
           }
+          setClaimStatus(existing.status);
           setStage("submitted");
           return;
         }
@@ -202,6 +203,24 @@ const SurveyDetail = () => {
 
   // Submitted for admin review
   if (stage === "submitted") {
+    if (claimStatus === "approved") {
+      return (
+        <CenteredCard
+          icon={<CheckCircle2 className="h-8 w-8 text-primary-foreground" />}
+          title="Approved ✅"
+          body={<>Your submission was approved! You earned <span className="font-bold text-primary">+{survey.reward_cents} coins</span>.</>}
+        />
+      );
+    }
+    if (claimStatus === "rejected") {
+      return (
+        <CenteredCard
+          icon={<ExternalLink className="h-8 w-8 text-primary-foreground" />}
+          title="Rejected ❌"
+          body="Unfortunately, your submission was not approved by the admin."
+        />
+      );
+    }
     return (
       <CenteredCard
         icon={<Clock className="h-8 w-8 text-primary-foreground" />}
