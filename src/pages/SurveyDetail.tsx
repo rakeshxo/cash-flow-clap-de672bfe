@@ -54,6 +54,7 @@ const SurveyDetail = () => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [stage, setStage] = useState<Stage>("loading");
+  const [claimStatus, setClaimStatus] = useState<string>("pending");
   const [userId, setUserId] = useState<string | null>(null);
   const [trackingUid, setTrackingUid] = useState<string | null>(null);
   const [externalUrl, setExternalUrl] = useState<string | null>(null);
