@@ -1,1 +1,0 @@
-ALTER TABLE public.surveys ADD COLUMN target_audience text NOT NULL DEFAULT '';
