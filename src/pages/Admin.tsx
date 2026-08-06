@@ -66,6 +66,7 @@ const Admin = () => {
           <TabsTrigger value="redemptions">Redemptions</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="panel">Panel statuses</TabsTrigger>
           <TabsTrigger value="audit">Audit log</TabsTrigger>
         </TabsList>
         <TabsContent value="overview"><OverviewAdmin /></TabsContent>
@@ -78,6 +79,7 @@ const Admin = () => {
         <TabsContent value="redemptions"><RedemptionsAdmin /></TabsContent>
         <TabsContent value="users"><UsersAdmin /></TabsContent>
         <TabsContent value="security"><SecurityEventsAdmin /></TabsContent>
+        <TabsContent value="panel"><PanelStatusAdmin /></TabsContent>
         <TabsContent value="audit"><AuditLogAdmin /></TabsContent>
       </Tabs>
     </AppLayout>
