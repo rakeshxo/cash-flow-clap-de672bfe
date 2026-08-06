@@ -17,6 +17,10 @@ import {
 import { toast } from "sonner";
 import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useIdleLogout } from "@/hooks/useIdleLogout";
+import { useAccountStatus } from "@/hooks/useAccountStatus";
+import { AlertTriangle } from "lucide-react";
+
 
 const navItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
