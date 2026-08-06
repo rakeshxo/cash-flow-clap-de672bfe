@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { awardCoins } from "@/lib/coins";
+
 import { Shield, Plus, Trash2, Pencil, X, Check, ExternalLink } from "lucide-react";
 import { AGE_RANGES, GENDERS, EMPLOYMENT, INCOME, MARITAL, EDUCATION } from "@/lib/surveyTargeting";
 
@@ -630,31 +630,13 @@ const SurveyClaimsAdmin = () => {
   useEffect(() => { load(); }, []);
 
   const approve = async (claim: any) => {
-    const { error } = await supabase
-      .from("survey_claims")
-      .update({ status: "approved", reviewed_at: new Date().toISOString() })
-      .eq("id", claim.id)
-      .eq("status", "pending");
+    const { error } = await supabase.rpc("admin_review_survey_claim", { _claim_id: claim.id, _approve: true });
     if (error) return toast.error(error.message);
-    try {
-      await awardCoins({
-        userId: claim.user_id,
-        amount: claim.reward_cents,
-        type: "survey",
-        description: `Approved: ${claim.surveys?.title ?? "External survey"}`,
-        referenceId: claim.survey_id,
-      });
-    } catch (e: any) {
-      toast.error("Approved but failed to award coins: " + e.message);
-    }
     toast.success("Claim approved & coins awarded");
     load();
   };
   const reject = async (id: string) => {
-    const { error } = await supabase
-      .from("survey_claims")
-      .update({ status: "rejected", reviewed_at: new Date().toISOString() })
-      .eq("id", id);
+    const { error } = await supabase.rpc("admin_review_survey_claim", { _claim_id: id, _approve: false });
     if (error) return toast.error(error.message);
     toast.success("Claim rejected");
     load();
