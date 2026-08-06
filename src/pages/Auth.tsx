@@ -30,6 +30,31 @@ const GoogleIcon = () => (
 
 type Mode = "signin" | "signup" | "forgot";
 
+/* --- Client-side brute-force friction (server rate limits remain the source of truth) --- */
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 5 * 60 * 1000;
+const lockKey = (email: string) => `login_attempts:${email.trim().toLowerCase()}`;
+
+const readAttempts = (email: string): { count: number; until: number } => {
+  try {
+    return JSON.parse(localStorage.getItem(lockKey(email)) ?? "") ?? { count: 0, until: 0 };
+  } catch {
+    return { count: 0, until: 0 };
+  }
+};
+
+const lockoutRemainingMs = (email: string) => Math.max(0, readAttempts(email).until - Date.now());
+
+const registerFailure = (email: string) => {
+  const cur = readAttempts(email);
+  const count = cur.count + 1;
+  const until = count >= MAX_ATTEMPTS ? Date.now() + LOCKOUT_MS : 0;
+  localStorage.setItem(lockKey(email), JSON.stringify({ count: until ? 0 : count, until }));
+  return { count, locked: !!until };
+};
+
+const clearAttempts = (email: string) => localStorage.removeItem(lockKey(email));
+
 const Auth = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -83,6 +108,14 @@ const Auth = () => {
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!validate()) return;
+    if (mode === "signin") {
+      const remaining = lockoutRemainingMs(email);
+      if (remaining > 0) {
+        return toast.error(
+          `Too many failed attempts. Try again in ${Math.ceil(remaining / 1000)}s or reset your password.`,
+        );
+      }
+    }
     setLoading(true);
     try {
       if (mode === "forgot") {
@@ -109,17 +142,27 @@ const Auth = () => {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
+        clearAttempts(email);
         toast.success("Welcome back!");
       }
     } catch (err: any) {
       const msg: string = err?.message ?? "Something went wrong";
-      toast.error(
-        /invalid login/i.test(msg)
-          ? "Incorrect email or password."
-          : /already registered/i.test(msg)
-          ? "That email already has an account — log in instead."
-          : msg
-      );
+      if (mode === "signin" && /invalid login/i.test(msg)) {
+        const { count, locked } = registerFailure(email);
+        toast.error(
+          locked
+            ? "Too many failed attempts. Sign-in is locked for 5 minutes."
+            : `Incorrect email or password. ${MAX_ATTEMPTS - count} attempt${MAX_ATTEMPTS - count === 1 ? "" : "s"} left.`,
+        );
+      } else {
+        toast.error(
+          /invalid login/i.test(msg)
+            ? "Incorrect email or password."
+            : /already registered/i.test(msg)
+            ? "That email already has an account — log in instead."
+            : msg
+        );
+      }
     } finally {
       setLoading(false);
     }
