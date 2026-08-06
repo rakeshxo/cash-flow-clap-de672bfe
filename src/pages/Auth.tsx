@@ -99,7 +99,7 @@ const Auth = () => {
           options: { emailRedirectTo: `${window.location.origin}/dashboard` },
         });
         if (error) throw error;
-        if (data.user) await handleReferral(data.user.id);
+        if (data.session) await handleReferral();
         if (!data.session) {
           setSent(true);
           toast.success("Check your email to confirm your account.");
