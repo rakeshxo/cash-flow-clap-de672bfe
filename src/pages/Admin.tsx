@@ -733,7 +733,9 @@ const SurveyClaimsAdmin = () => {
           </div>
         </div>
       ))}
+      </div>
     </div>
+
   );
 };
 const UsersAdmin = () => {
