@@ -20,6 +20,7 @@ import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { toastError, withRetry } from "@/lib/errors";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
 import { DataState } from "@/components/DataState";
+import Seo from "@/components/Seo";
 
 const MIN_WITHDRAW = 500;
 
@@ -125,6 +126,7 @@ const Withdraw = () => {
 
   return (
     <AppLayout>
+      <Seo title="Withdraw Your Earnings — Survey Paradox" description="Cash out your Survey Paradox coins to PayPal, bank transfer, or crypto once you reach the 500-coin minimum." path="/withdraw" noindex />
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-hero shadow-glow">

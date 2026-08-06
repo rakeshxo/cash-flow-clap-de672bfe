@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { Coins, Bell } from "lucide-react";
+import Seo from "@/components/Seo";
 
 const Activity = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -20,6 +21,7 @@ const Activity = () => {
 
   return (
     <AppLayout>
+      <Seo title="Activity History — Survey Paradox" description="Review every coin you have earned, survey claim status, and withdrawal activity on Survey Paradox." path="/activity" noindex />
       <h1 className="mb-2 font-display text-3xl font-bold text-foreground">Activity</h1>
       <p className="mb-8 text-muted-foreground">Everything that happened on your account.</p>
 

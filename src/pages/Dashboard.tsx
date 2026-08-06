@@ -8,6 +8,7 @@ import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { toast } from "sonner";
 import { useBackgroundGate } from "@/hooks/useBackgroundGate";
 import { matchesProfile, type ProfileLite } from "@/lib/surveyTargeting";
+import Seo from "@/components/Seo";
 
 const DAILY_GOAL = 50;
 
@@ -92,15 +93,16 @@ const Dashboard = () => {
     toast.success(`+${earned} coins`);
   };
 
-  if (checking || loading) return <AppLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;
+  if (checking || loading) return <AppLayout>
+      <Seo title="Dashboard — Survey Paradox" description="Track your coin balance, daily goal, streak, and recommended surveys in your Survey Paradox dashboard." path="/dashboard" noindex /><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;
 
   const goalPct = Math.min(100, Math.round((todayCoins / DAILY_GOAL) * 100));
 
   return (
     <AppLayout>
       <div className="mb-8 flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">Welcome back,</p>
-        <h1 className="font-display text-3xl font-bold capitalize text-foreground">{name}</h1>
+        <h1 className="font-display text-3xl font-bold text-foreground">User dashboard</h1>
+        <p className="text-sm capitalize text-muted-foreground">Welcome back, {name}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

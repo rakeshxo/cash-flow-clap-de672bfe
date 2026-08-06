@@ -7,6 +7,7 @@ import { Clock, Coins, Sparkles, CheckCircle2, XCircle, Clock3 } from "lucide-re
 import { useBackgroundGate } from "@/hooks/useBackgroundGate";
 import { matchesProfile, hasAnyTargeting, type ProfileLite } from "@/lib/surveyTargeting";
 import { Badge } from "@/components/ui/badge";
+import Seo from "@/components/Seo";
 
 type ClaimInfo = { survey_id: string; status: string };
 
@@ -38,7 +39,8 @@ const Earn = () => {
     })();
   }, [checking]);
 
-  if (checking || loading) return <AppLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;
+  if (checking || loading) return <AppLayout>
+      <Seo title="Available Paid Surveys — Survey Paradox" description="Browse paid surveys matched to your profile, complete them, and earn coins you can withdraw as real cash." path="/earn" noindex /><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;
 
   // Build a map of survey_id -> latest claim status
   const claimMap = new Map<string, string>();

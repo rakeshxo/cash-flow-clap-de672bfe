@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, PlayCircle, Wallet, Vote, Zap } from "lucide-react";
+import Seo, { SITE_URL } from "@/components/Seo";
 import logo from "@/assets/logo.png";
 
 const Index = () => {
@@ -16,6 +17,26 @@ const Index = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden font-sans">
+      <Seo
+        title="Survey Paradox — Earn Cash Completing Surveys"
+        description="Take quick paid surveys, watch videos, and answer daily polls to earn coins on Survey Paradox. Cash out to PayPal, bank, or crypto from 500 coins."
+        path="/"
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Survey Paradox",
+            url: SITE_URL,
+            logo: `${SITE_URL}/og-image.jpg`,
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Survey Paradox",
+            url: SITE_URL,
+          },
+        ]}
+      />
       {/* Ambient neon orbs */}
       <div aria-hidden className="pointer-events-none absolute -top-40 -left-32 h-[28rem] w-[28rem] rounded-full bg-primary/20 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute top-1/3 -right-40 h-[32rem] w-[32rem] rounded-full bg-accent/20 blur-3xl" />
@@ -23,7 +44,7 @@ const Index = () => {
       <header className="container relative z-10 mx-auto flex items-center justify-between py-6">
         <Link to="/" className="group flex items-center gap-2.5">
           <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-primary/40 bg-background shadow-neon transition group-hover:shadow-glow">
-            <img src={logo} alt="Survey Paradox logo" className="h-8 w-8 object-contain" />
+            <img src={logo} alt="Survey Paradox" className="h-8 w-8 object-contain" width={32} height={32} />
           </span>
           <span className="font-display text-xl font-bold tracking-wider text-foreground">
             SURVEY <span className="text-gradient-neon">PARADOX</span>
@@ -67,7 +88,9 @@ const Index = () => {
 
         <div className="neon-divider mx-auto max-w-5xl" />
 
-        <section className="mx-auto grid max-w-5xl grid-cols-2 gap-4 py-16 md:grid-cols-4">
+        <section className="mx-auto max-w-5xl py-16">
+          <h2 className="mb-8 text-center font-display text-2xl font-bold uppercase tracking-wider text-foreground">Ways to earn</h2>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {[
             { icon: Sparkles, title: "Surveys", text: "Share opinions" },
             { icon: PlayCircle, title: "Videos", text: "Watch & earn" },
@@ -86,11 +109,13 @@ const Index = () => {
               <p className="mt-1 text-xs text-muted-foreground">{f.text}</p>
             </div>
           ))}
+          </div>
         </section>
       </main>
 
       <footer className="relative z-10 border-t border-border/60 py-6 text-center text-xs uppercase tracking-widest text-muted-foreground">
-        © {new Date().getFullYear()} Survey Paradox · Built for honest opinions
+        <Link to="/get-paid-to-watch-videos" className="text-primary hover:underline">Get paid to watch videos</Link>
+        <div className="mt-2">© {new Date().getFullYear()} Survey Paradox · Built for honest opinions</div>
       </footer>
     </div>
   );
