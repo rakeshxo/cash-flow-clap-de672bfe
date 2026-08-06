@@ -702,39 +702,87 @@ const SurveyClaimsAdmin = () => {
 const UsersAdmin = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [adjustFor, setAdjustFor] = useState<any | null>(null);
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustReason, setAdjustReason] = useState("");
+  const [statusFor, setStatusFor] = useState<{ user: any; status: string } | null>(null);
+  const [statusReason, setStatusReason] = useState("");
 
   const load = async () => {
     setLoading(true);
-    const [{ data: profiles }, { data: roles }, { data: txs }] = await Promise.all([
-      supabase.from("profiles").select("user_id, display_name, avatar_url, created_at, daily_streak"),
-      supabase.from("user_roles").select("user_id, role"),
-      supabase.from("coin_transactions").select("user_id, amount"),
-    ]);
-    const adminSet = new Set((roles ?? []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id));
-    const balances = new Map<string, number>();
-    (txs ?? []).forEach((t: any) => balances.set(t.user_id, (balances.get(t.user_id) ?? 0) + t.amount));
-    const merged = (profiles ?? []).map((p: any) => ({
-      ...p,
-      balance: balances.get(p.user_id) ?? 0,
-      isAdmin: adminSet.has(p.user_id),
-    })).sort((a, b) => b.balance - a.balance);
-    setRows(merged);
-    setLoading(false);
+    setLoadError(null);
+    try {
+      const [{ data: profiles, error: pErr }, { data: roles }, { data: txs }] = await withRetry(() =>
+        Promise.all([
+          supabase
+            .from("profiles")
+            .select("user_id, display_name, avatar_url, created_at, daily_streak, account_status, risk_score, suspended_reason, last_seen_at"),
+          supabase.from("user_roles").select("user_id, role"),
+          supabase.from("coin_transactions").select("user_id, amount"),
+        ]),
+      );
+      if (pErr) throw pErr;
+      const adminSet = new Set((roles ?? []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id));
+      const balances = new Map<string, number>();
+      (txs ?? []).forEach((t: any) => balances.set(t.user_id, (balances.get(t.user_id) ?? 0) + t.amount));
+      const merged = (profiles ?? [])
+        .map((p: any) => ({ ...p, balance: balances.get(p.user_id) ?? 0, isAdmin: adminSet.has(p.user_id) }))
+        .sort((a, b) => b.balance - a.balance);
+      setRows(merged);
+    } catch (err) {
+      setLoadError(friendlyError(err, "We couldn't load the user list."));
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { load(); }, []);
 
-  const grant = async (user_id: string) => {
-    const { error } = await supabase.from("user_roles").insert({ user_id, role: "admin" });
-    if (error) return toast.error(error.message);
-    toast.success("Admin granted");
+  const setRole = async (user_id: string, grant: boolean) => {
+    if (!grant && !confirm("Revoke admin access?")) return;
+    setBusy(user_id);
+    const { error } = await supabase.rpc("admin_set_admin_role", { _user_id: user_id, _grant: grant });
+    setBusy(null);
+    if (error) return toastError(error, "Couldn't update the admin role.");
+    toast.success(grant ? "Admin granted" : "Admin revoked");
     load();
   };
-  const revoke = async (user_id: string) => {
-    if (!confirm("Revoke admin access?")) return;
-    const { error } = await supabase.from("user_roles").delete().eq("user_id", user_id).eq("role", "admin");
-    if (error) return toast.error(error.message);
-    toast.success("Admin revoked");
+
+  const submitStatus = async () => {
+    if (!statusFor) return;
+    setBusy(statusFor.user.user_id);
+    const { error } = await supabase.rpc("admin_set_account_status", {
+      _user_id: statusFor.user.user_id,
+      _status: statusFor.status,
+      _reason: statusReason.trim() || null,
+    });
+    setBusy(null);
+    if (error) return toastError(error, "Couldn't update the account status.");
+    toast.success("Account status updated");
+    setStatusFor(null);
+    setStatusReason("");
+    load();
+  };
+
+  const submitAdjust = async () => {
+    if (!adjustFor) return;
+    const amount = Math.trunc(Number(adjustAmount));
+    if (!Number.isFinite(amount) || amount === 0) return toast.error("Enter a non-zero coin amount");
+    if (!adjustReason.trim()) return toast.error("A reason is required");
+    setBusy(adjustFor.user_id);
+    const { error } = await supabase.rpc("admin_adjust_coins", {
+      _user_id: adjustFor.user_id,
+      _amount: amount,
+      _reason: adjustReason.trim(),
+    });
+    setBusy(null);
+    if (error) return toastError(error, "Couldn't adjust the balance.");
+    toast.success("Balance adjusted");
+    setAdjustFor(null);
+    setAdjustAmount("");
+    setAdjustReason("");
     load();
   };
 
@@ -744,6 +792,13 @@ const UsersAdmin = () => {
     r.user_id.toLowerCase().includes(filter.toLowerCase())
   );
 
+  const statusChip = (s: string) =>
+    s === "suspended"
+      ? "bg-destructive text-destructive-foreground"
+      : s === "flagged"
+        ? "bg-destructive/15 text-destructive"
+        : "bg-secondary text-secondary-foreground";
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -751,36 +806,66 @@ const UsersAdmin = () => {
         <p className="text-sm text-muted-foreground">{filtered.length} of {rows.length} users</p>
       </div>
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-        {loading ? (
-          <p className="p-8 text-center text-muted-foreground">Loading users...</p>
-        ) : filtered.length === 0 ? (
-          <p className="p-8 text-center text-muted-foreground">No users found.</p>
-        ) : (
+        <DataState
+          loading={loading}
+          error={loadError}
+          empty={filtered.length === 0}
+          emptyText="No users found."
+          loadingText="Loading users..."
+          onRetry={load}
+        >
           <div className="divide-y divide-border">
             {filtered.map((u) => (
               <div key={u.user_id} className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <p className="truncate font-medium text-foreground">{u.display_name ?? "Unnamed"}</p>
                     {u.isAdmin && (
                       <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Admin</span>
                     )}
+                    <span className={`rounded-full px-2 py-0.5 text-xs capitalize ${statusChip(u.account_status)}`}>
+                      {u.account_status}
+                    </span>
+                    {u.risk_score > 0 && (
+                      <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">risk {u.risk_score}</span>
+                    )}
                   </div>
                   <p className="truncate text-xs text-muted-foreground">
                     {u.user_id.slice(0, 8)} · joined {new Date(u.created_at).toLocaleDateString()} · streak {u.daily_streak}
+                    {u.last_seen_at ? ` · seen ${new Date(u.last_seen_at).toLocaleDateString()}` : ""}
                   </p>
+                  {u.suspended_reason && (
+                    <p className="mt-0.5 truncate text-xs text-destructive">{u.suspended_reason}</p>
+                  )}
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="mr-1 text-right">
                     <p className="font-display text-lg font-bold text-foreground">{u.balance.toLocaleString()}</p>
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">coins · ${(u.balance / 100).toFixed(2)}</p>
                   </div>
+                  <Button size="sm" variant="outline" disabled={busy === u.user_id} onClick={() => { setAdjustFor(u); setAdjustAmount(""); setAdjustReason(""); }}>
+                    Adjust coins
+                  </Button>
+                  {u.account_status === "active" ? (
+                    <>
+                      <Button size="sm" variant="outline" disabled={busy === u.user_id} onClick={() => { setStatusFor({ user: u, status: "flagged" }); setStatusReason(""); }}>
+                        Flag
+                      </Button>
+                      <Button size="sm" variant="destructive" disabled={busy === u.user_id} onClick={() => { setStatusFor({ user: u, status: "suspended" }); setStatusReason(""); }}>
+                        Suspend
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" variant="outline" disabled={busy === u.user_id} onClick={() => { setStatusFor({ user: u, status: "active" }); setStatusReason(""); }}>
+                      Restore
+                    </Button>
+                  )}
                   {u.isAdmin ? (
-                    <Button size="sm" variant="outline" onClick={() => revoke(u.user_id)}>
+                    <Button size="sm" variant="outline" disabled={busy === u.user_id} onClick={() => setRole(u.user_id, false)}>
                       <X className="mr-1 h-3.5 w-3.5" /> Revoke admin
                     </Button>
                   ) : (
-                    <Button size="sm" onClick={() => grant(u.user_id)}>
+                    <Button size="sm" disabled={busy === u.user_id} onClick={() => setRole(u.user_id, true)}>
                       <Shield className="mr-1 h-3.5 w-3.5" /> Make admin
                     </Button>
                   )}
@@ -788,11 +873,60 @@ const UsersAdmin = () => {
               </div>
             ))}
           </div>
-        )}
+        </DataState>
       </div>
+
+      <Dialog open={!!adjustFor} onOpenChange={(o) => !o && setAdjustFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adjust coin balance</DialogTitle>
+            <DialogDescription>
+              {adjustFor?.display_name ?? "User"} currently holds {(adjustFor?.balance ?? 0).toLocaleString()} coins.
+              Every adjustment is written to the audit log.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Field label="Amount (use a negative number to deduct)">
+              <Input type="number" value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} placeholder="e.g. 250 or -100" />
+            </Field>
+            <Field label="Reason (shown in the audit log)">
+              <Textarea value={adjustReason} onChange={(e) => setAdjustReason(e.target.value)} placeholder="Goodwill credit for support ticket #123" />
+            </Field>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setAdjustFor(null)}>Cancel</Button>
+            <Button onClick={submitAdjust}>Apply adjustment</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!statusFor} onOpenChange={(o) => !o && setStatusFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="capitalize">
+              {statusFor?.status === "active" ? "Restore account" : `${statusFor?.status} account`}
+            </DialogTitle>
+            <DialogDescription>
+              {statusFor?.status === "suspended"
+                ? "Suspended users cannot earn or withdraw."
+                : statusFor?.status === "flagged"
+                  ? "Flagged users can keep earning but withdrawals are paused."
+                  : "This clears the restriction and resets the risk score."}
+            </DialogDescription>
+          </DialogHeader>
+          <Field label="Reason (sent to the user)">
+            <Textarea value={statusReason} onChange={(e) => setStatusReason(e.target.value)} placeholder="Explain the decision" />
+          </Field>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setStatusFor(null)}>Cancel</Button>
+            <Button onClick={submitStatus}>Confirm</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
 
 /* ---------- Shared UI ---------- */
 const FormCard = ({ title, children, onReset }: any) => (
