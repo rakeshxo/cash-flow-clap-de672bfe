@@ -684,24 +684,9 @@ const SurveyClaimsAdmin = () => {
     load();
   };
 
-  const [syncing, setSyncing] = useState(false);
-  const syncPanel = async () => {
-    setSyncing(true);
-    const { data, error } = await supabase.functions.invoke("panel-sync", { body: { scope: "all" } });
-    setSyncing(false);
-    if (error) return toast.error("Panel sync failed — check the panel API key and status endpoint");
-    const res = data as { checked?: number; settled?: number };
-    toast.success(`Checked ${res?.checked ?? 0} pending claim(s), settled ${res?.settled ?? 0}`);
-    load();
-  };
-
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={syncPanel} disabled={syncing}>
-          {syncing ? "Syncing with panel..." : "Sync with panel"}
-        </Button>
-      </div>
+
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       {items.length === 0 ? <p className="p-8 text-center text-muted-foreground">No survey claims yet.</p> : items.map((c) => (
 
