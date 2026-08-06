@@ -4,9 +4,22 @@ import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Coins, Wallet } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Coins, Wallet, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
+import { toastError, withRetry } from "@/lib/errors";
+import { useAccountStatus } from "@/hooks/useAccountStatus";
+import { DataState } from "@/components/DataState";
 
 const MIN_WITHDRAW = 500;
 
@@ -16,6 +29,16 @@ const METHODS = [
   { id: "crypto", label: "Crypto (USDT)", placeholder: "Wallet address" },
 ];
 
+const validateDestination = (method: string, value: string): string | null => {
+  const v = value.trim();
+  if (!v) return "Enter your payout destination";
+  if (v.length > 200) return "Destination is too long";
+  if (method === "paypal" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "Enter a valid PayPal email";
+  if (method === "bank" && v.length < 8) return "Enter a valid account number or IBAN";
+  if (method === "crypto" && v.length < 20) return "Enter a valid wallet address";
+  return null;
+};
+
 const Withdraw = () => {
   const [balance, setBalance] = useState(0);
   const [userId, setUserId] = useState("");
@@ -24,45 +47,81 @@ const Withdraw = () => {
   const [amount, setAmount] = useState<number>(MIN_WITHDRAW);
   const [history, setHistory] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { status: accountStatus, reason: accountReason } = useAccountStatus();
 
   const refresh = async (uid: string) => {
-    const [bal, h] = await Promise.all([
-      getBalance(uid),
-      supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-    ]);
-    setBalance(bal);
-    setHistory(h.data ?? []);
+    setLoadError(null);
+    try {
+      const [bal, h] = await withRetry(() =>
+        Promise.all([
+          getBalance(uid),
+          supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        ]),
+      );
+      setBalance(bal);
+      setHistory(h.data ?? []);
+    } catch (err) {
+      setLoadError("We couldn't load your withdrawal data.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     (async () => {
       const { data: sess } = await supabase.auth.getSession();
-      if (!sess.session) return;
+      if (!sess.session) {
+        setLoading(false);
+        return;
+      }
       setUserId(sess.session.user.id);
       refresh(sess.session.user.id);
     })();
   }, []);
 
-  const submit = async () => {
-    if (!destination.trim()) return toast.error("Enter your payout destination");
-    if (amount < MIN_WITHDRAW) return toast.error(`Minimum withdrawal is ${MIN_WITHDRAW} coins`);
+  const pendingExists = history.some((h) => h.status === "pending");
+
+  const openConfirm = () => {
+    const destError = validateDestination(method, destination);
+    if (destError) return toast.error(destError);
+    if (!Number.isInteger(amount) || amount < MIN_WITHDRAW) return toast.error(`Minimum withdrawal is ${MIN_WITHDRAW} coins`);
     if (amount > balance) return toast.error("Not enough coins");
-    setSubmitting(true);
-    const { error } = await supabase.rpc("request_withdrawal", {
-      _coins: amount,
-      _method: method,
-      _destination: destination.trim(),
-    });
-    setSubmitting(false);
-    if (error) return toast.error(error.message);
-    toast.success("Withdrawal requested! Processed within 24h.");
-    setDestination("");
-    setAmount(MIN_WITHDRAW);
-    refresh(userId);
+    if (pendingExists) return toast.error("You already have a pending withdrawal.");
+    setConfirmOpen(true);
   };
 
-  const canWithdraw = balance >= MIN_WITHDRAW;
+  const submit = async () => {
+    setConfirmOpen(false);
+    setSubmitting(true);
+    try {
+      // Re-validate the session with the auth server before moving money.
+      const { data: fresh, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !fresh.user) throw new Error("Your session expired. Please sign in again.");
+
+      const { error } = await supabase.rpc("request_withdrawal", {
+        _coins: amount,
+        _method: method,
+        _destination: destination.trim(),
+      });
+      if (error) throw error;
+      toast.success("Withdrawal requested — our team reviews payouts within 24h.");
+      setDestination("");
+      setAmount(MIN_WITHDRAW);
+      refresh(userId);
+    } catch (err) {
+      toastError(err, "Withdrawal could not be submitted.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const blocked = accountStatus !== "active";
+  const canWithdraw = balance >= MIN_WITHDRAW && !blocked && !pendingExists;
   const selectedMethod = METHODS.find((m) => m.id === method)!;
+
 
   return (
     <AppLayout>
