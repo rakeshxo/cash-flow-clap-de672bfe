@@ -462,6 +462,32 @@ export type Database = {
           },
         ]
       }
+      survey_screener_keys: {
+        Row: {
+          correct_answers: Json
+          survey_id: string
+          updated_at: string
+        }
+        Insert: {
+          correct_answers?: Json
+          survey_id: string
+          updated_at?: string
+        }
+        Update: {
+          correct_answers?: Json
+          survey_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_screener_keys_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: true
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       surveys: {
         Row: {
           category: string
@@ -669,12 +695,47 @@ export type Database = {
       }
     }
     Functions: {
+      admin_review_survey_claim: {
+        Args: { _approve: boolean; _claim_id: string }
+        Returns: undefined
+      }
+      award_video_watch: { Args: { _video_id: string }; Returns: number }
+      claim_daily_streak: { Args: never; Returns: Json }
+      claim_referral: { Args: { _ref_code: string }; Returns: boolean }
+      complete_in_app_survey: {
+        Args: { _answers: Json; _survey_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      internal_award_coins: {
+        Args: {
+          _amount: number
+          _description: string
+          _notify?: boolean
+          _reference_id?: string
+          _type: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      request_withdrawal: {
+        Args: { _coins: number; _destination: string; _method: string }
+        Returns: string
+      }
+      start_external_survey: {
+        Args: { _answers: Json; _survey_id: string }
+        Returns: Json
+      }
+      user_balance: { Args: { _user_id: string }; Returns: number }
+      vote_daily_poll: {
+        Args: { _option_index: number; _poll_id: string }
+        Returns: number
       }
     }
     Enums: {

@@ -13,31 +13,8 @@ export type CoinTxType =
   | "redeem"
   | "bonus";
 
-export async function awardCoins(opts: {
-  userId: string;
-  amount: number;
-  type: CoinTxType;
-  description: string;
-  referenceId?: string | null;
-  notify?: boolean;
-}) {
-  const { error } = await supabase.from("coin_transactions").insert({
-    user_id: opts.userId,
-    amount: opts.amount,
-    type: opts.type,
-    description: opts.description,
-    reference_id: opts.referenceId ?? null,
-  });
-  if (error) throw error;
-  if (opts.notify !== false) {
-    await supabase.from("notifications").insert({
-      user_id: opts.userId,
-      title: `+${opts.amount} coins`,
-      body: opts.description,
-      icon: "coin",
-    });
-  }
-}
+// NOTE: Coins can only be issued by trusted server-side database functions.
+// The client never writes to coin_transactions directly.
 
 export async function getBalance(userId: string): Promise<number> {
   const { data, error } = await supabase
