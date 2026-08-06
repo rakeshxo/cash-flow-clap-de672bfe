@@ -109,11 +109,13 @@ const Index = () => {
               <p className="mt-1 text-xs text-muted-foreground">{f.text}</p>
             </div>
           ))}
+          </div>
         </section>
       </main>
 
       <footer className="relative z-10 border-t border-border/60 py-6 text-center text-xs uppercase tracking-widest text-muted-foreground">
-        © {new Date().getFullYear()} Survey Paradox · Built for honest opinions
+        <Link to="/get-paid-to-watch-videos" className="text-primary hover:underline">Get paid to watch videos</Link>
+        <div className="mt-2">© {new Date().getFullYear()} Survey Paradox · Built for honest opinions</div>
       </footer>
     </div>
   );
