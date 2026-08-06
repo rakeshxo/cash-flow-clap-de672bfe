@@ -77,8 +77,6 @@ const Auth = () => {
       if (data.session) navigate("/dashboard", { replace: true });
     });
     return () => sub.subscription.unsubscribe();
-    <>
-    <Seo title="Log In or Sign Up — Survey Paradox" description="Create a free Survey Paradox account or log in to start earning coins from paid surveys and videos." path="/auth" />
   }, [navigate]);
 
   const strength = useMemo(() => {
