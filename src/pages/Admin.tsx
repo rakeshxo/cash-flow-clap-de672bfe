@@ -53,8 +53,9 @@ const Admin = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="surveys">
+      <Tabs defaultValue="overview">
         <TabsList className="mb-6 flex w-full flex-wrap">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
           <TabsTrigger value="claims">Survey claims</TabsTrigger>
           <TabsTrigger value="videos">Videos</TabsTrigger>
@@ -63,7 +64,10 @@ const Admin = () => {
           <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
           <TabsTrigger value="redemptions">Redemptions</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="audit">Audit log</TabsTrigger>
         </TabsList>
+        <TabsContent value="overview"><OverviewAdmin /></TabsContent>
         <TabsContent value="surveys"><SurveysAdmin /></TabsContent>
         <TabsContent value="claims"><SurveyClaimsAdmin /></TabsContent>
         <TabsContent value="videos"><VideosAdmin /></TabsContent>
@@ -72,6 +76,8 @@ const Admin = () => {
         <TabsContent value="withdrawals"><WithdrawalsAdmin /></TabsContent>
         <TabsContent value="redemptions"><RedemptionsAdmin /></TabsContent>
         <TabsContent value="users"><UsersAdmin /></TabsContent>
+        <TabsContent value="security"><SecurityEventsAdmin /></TabsContent>
+        <TabsContent value="audit"><AuditLogAdmin /></TabsContent>
       </Tabs>
     </AppLayout>
   );
