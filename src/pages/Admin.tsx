@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { awardCoins } from "@/lib/coins";
+
 import { Shield, Plus, Trash2, Pencil, X, Check, ExternalLink } from "lucide-react";
 import { AGE_RANGES, GENDERS, EMPLOYMENT, INCOME, MARITAL, EDUCATION } from "@/lib/surveyTargeting";
 
@@ -136,25 +136,40 @@ const SurveysAdmin = () => {
       target_has_kids: form.target_has_kids ?? "any",
       created_by: sess.session?.user.id ?? null,
     };
-    const { error } = editId
-      ? await supabase.from("surveys").update(payload).eq("id", editId)
-      : await supabase.from("surveys").insert(payload);
+    const { data: saved, error } = editId
+      ? await supabase.from("surveys").update(payload).eq("id", editId).select("id").maybeSingle()
+      : await supabase.from("surveys").insert(payload).select("id").maybeSingle();
+    if (error) { setSaving(false); return toast.error(error.message); }
+    // Correct answers are stored separately so respondents can never read them.
+    if (hasExternal && saved?.id) {
+      const keys = (screener as any[]).map((q) => ((q.type ?? "choice") === "open" ? 0 : Number(q.correct ?? 0)));
+      const { error: kErr } = await supabase
+        .from("survey_screener_keys")
+        .upsert({ survey_id: saved.id, correct_answers: keys, updated_at: new Date().toISOString() });
+      if (kErr) { setSaving(false); return toast.error(kErr.message); }
+    }
     setSaving(false);
-    if (error) return toast.error(error.message);
     toast.success(editId ? "Survey updated" : "Survey created");
     reset();
     load();
   };
 
-  const edit = (s: any) => {
+  const edit = async (s: any) => {
     setEditId(s.id);
+    // Correct answers live in the admin-only key table.
+    const { data: keyRow } = await supabase
+      .from("survey_screener_keys")
+      .select("correct_answers")
+      .eq("survey_id", s.id)
+      .maybeSingle();
+    const keys: number[] = Array.isArray(keyRow?.correct_answers) ? (keyRow!.correct_answers as any[]).map(Number) : [];
     setForm({
       title: s.title, description: s.description, category: s.category,
       reward_cents: s.reward_cents, estimated_minutes: s.estimated_minutes,
       questions: Array.isArray(s.questions) && s.questions.length ? s.questions : [{ q: "", options: ["", ""] }],
       external_url: s.external_url ?? "",
       screener_questions: Array.isArray(s.screener_questions) && s.screener_questions.length
-        ? s.screener_questions
+        ? s.screener_questions.map((q: any, i: number) => ({ ...q, correct: keys[i] ?? 0 }))
         : [{ q: "", options: ["", ""], correct: 0 }],
       target_audience: s.target_audience ?? "",
       target_age_ranges: s.target_age_ranges ?? [],
@@ -630,31 +645,13 @@ const SurveyClaimsAdmin = () => {
   useEffect(() => { load(); }, []);
 
   const approve = async (claim: any) => {
-    const { error } = await supabase
-      .from("survey_claims")
-      .update({ status: "approved", reviewed_at: new Date().toISOString() })
-      .eq("id", claim.id)
-      .eq("status", "pending");
+    const { error } = await supabase.rpc("admin_review_survey_claim", { _claim_id: claim.id, _approve: true });
     if (error) return toast.error(error.message);
-    try {
-      await awardCoins({
-        userId: claim.user_id,
-        amount: claim.reward_cents,
-        type: "survey",
-        description: `Approved: ${claim.surveys?.title ?? "External survey"}`,
-        referenceId: claim.survey_id,
-      });
-    } catch (e: any) {
-      toast.error("Approved but failed to award coins: " + e.message);
-    }
     toast.success("Claim approved & coins awarded");
     load();
   };
   const reject = async (id: string) => {
-    const { error } = await supabase
-      .from("survey_claims")
-      .update({ status: "rejected", reviewed_at: new Date().toISOString() })
-      .eq("id", id);
+    const { error } = await supabase.rpc("admin_review_survey_claim", { _claim_id: id, _approve: false });
     if (error) return toast.error(error.message);
     toast.success("Claim rejected");
     load();

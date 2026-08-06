@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Coins, Sparkles, PlayCircle, Wallet, Flame, Target, Vote } from "lucide-react";
-import { awardCoins, coinsToCash, formatCoins, getBalance } from "@/lib/coins";
+import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { toast } from "sonner";
 import { useBackgroundGate } from "@/hooks/useBackgroundGate";
 import { matchesProfile, type ProfileLite } from "@/lib/surveyTargeting";
@@ -49,28 +49,12 @@ const Dashboard = () => {
       const bal = (txR.data ?? []).reduce((s, r) => s + (r.amount ?? 0), 0);
       const todayBal = (todayR.data ?? []).reduce((s, r) => s + (r.amount ?? 0), 0);
 
-      // Update streak if new day
-      if (profile && profile.last_active_date !== today.toISOString().slice(0, 10)) {
-        const yest = new Date(today);
-        yest.setDate(yest.getDate() - 1);
-        const isConsecutive = profile.last_active_date === yest.toISOString().slice(0, 10);
-        const newStreak = isConsecutive ? (profile.daily_streak ?? 0) + 1 : 1;
-        await supabase.from("profiles").update({
-          daily_streak: newStreak,
-          last_active_date: today.toISOString().slice(0, 10),
-        }).eq("user_id", uid);
-        if (newStreak > 1) {
-          await awardCoins({
-            userId: uid,
-            amount: Math.min(newStreak * 2, 20),
-            type: "streak",
-            description: `${newStreak}-day login streak bonus`,
-          });
-          toast.success(`🔥 ${newStreak}-day streak! +${Math.min(newStreak * 2, 20)} coins`);
-        }
-        setStreak(newStreak);
-      } else {
-        setStreak(profile?.daily_streak ?? 0);
+      // Streak is computed & rewarded server-side (trusted)
+      const { data: streakRes } = await supabase.rpc("claim_daily_streak");
+      const sr = (streakRes ?? {}) as { streak?: number; coins?: number };
+      setStreak(sr.streak ?? profile?.daily_streak ?? 0);
+      if ((sr.coins ?? 0) > 0) {
+        toast.success(`🔥 ${sr.streak}-day streak! +${sr.coins} coins`);
       }
 
       setName(profile?.display_name ?? sess.session.user.email?.split("@")[0] ?? "there");
@@ -98,18 +82,14 @@ const Dashboard = () => {
   }, [checking]);
 
   const votePoll = async (idx: number) => {
-    const { data: sess } = await supabase.auth.getSession();
-    if (!sess.session || !poll) return;
-    const uid = sess.session.user.id;
-    const { error } = await supabase.from("poll_votes").insert({
-      user_id: uid, poll_id: poll.id, option_index: idx,
-    });
-    if (error) return toast.error("Already voted today");
-    await awardCoins({ userId: uid, amount: poll.reward_coins, type: "poll", description: "Daily poll" });
+    if (!poll) return;
+    const { data: coins, error } = await supabase.rpc("vote_daily_poll", { _poll_id: poll.id, _option_index: idx });
+    if (error) return toast.error(error.message);
+    const earned = coins ?? 0;
     setPollVoted(true);
-    setBalance((b) => b + poll.reward_coins);
-    setTodayCoins((c) => c + poll.reward_coins);
-    toast.success(`+${poll.reward_coins} coins`);
+    setBalance((b) => b + earned);
+    setTodayCoins((c) => c + earned);
+    toast.success(`+${earned} coins`);
   };
 
   if (checking || loading) return <AppLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;

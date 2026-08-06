@@ -4,7 +4,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, Coins, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { awardCoins } from "@/lib/coins";
+
 
 const Videos = () => {
   const [videos, setVideos] = useState<any[]>([]);
@@ -39,11 +39,11 @@ const Videos = () => {
       setProgress(pct);
       if (pct >= 100) {
         clearInterval(interval);
-        await supabase.from("video_watches").insert({ user_id: userId, video_id: video.id, reward_coins: video.reward_coins });
-        await awardCoins({ userId, amount: video.reward_coins, type: "video", description: `Watched: ${video.title}`, referenceId: video.id });
-        setWatched((s) => new Set(s).add(video.id));
+        const { data: coins, error } = await supabase.rpc("award_video_watch", { _video_id: video.id });
         setPlaying(null);
-        toast.success(`+${video.reward_coins} coins!`);
+        if (error) return toast.error(error.message);
+        setWatched((s) => new Set(s).add(video.id));
+        toast.success(`+${coins} coins!`);
       }
     }, 100);
   };

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Coins, Wallet } from "lucide-react";
 import { toast } from "sonner";
-import { awardCoins, coinsToCash, formatCoins, getBalance } from "@/lib/coins";
+import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 
 const MIN_WITHDRAW = 500;
 
@@ -48,22 +48,16 @@ const Withdraw = () => {
     if (amount < MIN_WITHDRAW) return toast.error(`Minimum withdrawal is ${MIN_WITHDRAW} coins`);
     if (amount > balance) return toast.error("Not enough coins");
     setSubmitting(true);
-    const { error } = await supabase.from("withdrawals").insert({
-      user_id: userId,
-      coins_amount: amount,
-      cash_value_cents: amount,
-      method,
-      destination: destination.trim(),
+    const { error } = await supabase.rpc("request_withdrawal", {
+      _coins: amount,
+      _method: method,
+      _destination: destination.trim(),
     });
-    if (error) { setSubmitting(false); return toast.error(error.message); }
-    await awardCoins({
-      userId, amount: -amount, type: "redeem",
-      description: `Withdrawal via ${method}`,
-    });
+    setSubmitting(false);
+    if (error) return toast.error(error.message);
     toast.success("Withdrawal requested! Processed within 24h.");
     setDestination("");
     setAmount(MIN_WITHDRAW);
-    setSubmitting(false);
     refresh(userId);
   };
 
