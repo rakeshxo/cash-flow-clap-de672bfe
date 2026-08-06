@@ -208,6 +208,39 @@ export type Database = {
         }
         Relationships: []
       }
+      panel_status_mappings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          notify_body: string
+          notify_title: string
+          outcome: string
+          panel_status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notify_body?: string
+          notify_title?: string
+          outcome: string
+          panel_status: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notify_body?: string
+          notify_title?: string
+          outcome?: string
+          panel_status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       poll_votes: {
         Row: {
           id: string
