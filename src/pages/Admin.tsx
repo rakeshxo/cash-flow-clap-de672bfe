@@ -136,11 +136,19 @@ const SurveysAdmin = () => {
       target_has_kids: form.target_has_kids ?? "any",
       created_by: sess.session?.user.id ?? null,
     };
-    const { error } = editId
-      ? await supabase.from("surveys").update(payload).eq("id", editId)
-      : await supabase.from("surveys").insert(payload);
+    const { data: saved, error } = editId
+      ? await supabase.from("surveys").update(payload).eq("id", editId).select("id").maybeSingle()
+      : await supabase.from("surveys").insert(payload).select("id").maybeSingle();
+    if (error) { setSaving(false); return toast.error(error.message); }
+    // Correct answers are stored separately so respondents can never read them.
+    if (hasExternal && saved?.id) {
+      const keys = (screener as any[]).map((q) => ((q.type ?? "choice") === "open" ? 0 : Number(q.correct ?? 0)));
+      const { error: kErr } = await supabase
+        .from("survey_screener_keys")
+        .upsert({ survey_id: saved.id, correct_answers: keys, updated_at: new Date().toISOString() });
+      if (kErr) { setSaving(false); return toast.error(kErr.message); }
+    }
     setSaving(false);
-    if (error) return toast.error(error.message);
     toast.success(editId ? "Survey updated" : "Survey created");
     reset();
     load();
