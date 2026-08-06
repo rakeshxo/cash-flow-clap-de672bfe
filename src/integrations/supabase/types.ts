@@ -896,6 +896,10 @@ export type Database = {
         Returns: undefined
       }
       internal_require_admin: { Args: never; Returns: string }
+      panel_settle_claim: {
+        Args: { _panel_status: string; _tracking_uid: string }
+        Returns: Json
+      }
       request_redemption: { Args: { _reward_id: string }; Returns: string }
       request_withdrawal: {
         Args: { _coins: number; _destination: string; _method: string }
