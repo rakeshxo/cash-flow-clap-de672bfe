@@ -30,6 +30,31 @@ const GoogleIcon = () => (
 
 type Mode = "signin" | "signup" | "forgot";
 
+/* --- Client-side brute-force friction (server rate limits remain the source of truth) --- */
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 5 * 60 * 1000;
+const lockKey = (email: string) => `login_attempts:${email.trim().toLowerCase()}`;
+
+const readAttempts = (email: string): { count: number; until: number } => {
+  try {
+    return JSON.parse(localStorage.getItem(lockKey(email)) ?? "") ?? { count: 0, until: 0 };
+  } catch {
+    return { count: 0, until: 0 };
+  }
+};
+
+const lockoutRemainingMs = (email: string) => Math.max(0, readAttempts(email).until - Date.now());
+
+const registerFailure = (email: string) => {
+  const cur = readAttempts(email);
+  const count = cur.count + 1;
+  const until = count >= MAX_ATTEMPTS ? Date.now() + LOCKOUT_MS : 0;
+  localStorage.setItem(lockKey(email), JSON.stringify({ count: until ? 0 : count, until }));
+  return { count, locked: !!until };
+};
+
+const clearAttempts = (email: string) => localStorage.removeItem(lockKey(email));
+
 const Auth = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
