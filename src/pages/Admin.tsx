@@ -154,15 +154,22 @@ const SurveysAdmin = () => {
     load();
   };
 
-  const edit = (s: any) => {
+  const edit = async (s: any) => {
     setEditId(s.id);
+    // Correct answers live in the admin-only key table.
+    const { data: keyRow } = await supabase
+      .from("survey_screener_keys")
+      .select("correct_answers")
+      .eq("survey_id", s.id)
+      .maybeSingle();
+    const keys: number[] = Array.isArray(keyRow?.correct_answers) ? (keyRow!.correct_answers as any[]).map(Number) : [];
     setForm({
       title: s.title, description: s.description, category: s.category,
       reward_cents: s.reward_cents, estimated_minutes: s.estimated_minutes,
       questions: Array.isArray(s.questions) && s.questions.length ? s.questions : [{ q: "", options: ["", ""] }],
       external_url: s.external_url ?? "",
       screener_questions: Array.isArray(s.screener_questions) && s.screener_questions.length
-        ? s.screener_questions
+        ? s.screener_questions.map((q: any, i: number) => ({ ...q, correct: keys[i] ?? 0 }))
         : [{ q: "", options: ["", ""], correct: 0 }],
       target_audience: s.target_audience ?? "",
       target_age_ranges: s.target_age_ranges ?? [],
