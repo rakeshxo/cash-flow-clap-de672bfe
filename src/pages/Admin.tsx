@@ -604,13 +604,15 @@ const WithdrawalsAdmin = () => {
     setItems(data ?? []);
   };
   useEffect(() => { load(); }, []);
-  const setStatus = async (id: string, status: string) => {
-    const { error } = await supabase
-      .from("withdrawals")
-      .update({ status, processed_at: new Date().toISOString() })
-      .eq("id", id);
+  const review = async (id: string, approve: boolean) => {
+    const note = approve ? null : window.prompt("Reason for rejection (shown to the user, coins are refunded):") ?? "";
+    const { error } = await supabase.rpc("admin_review_withdrawal", {
+      _withdrawal_id: id,
+      _approve: approve,
+      _note: note,
+    });
     if (error) return toast.error(error.message);
-    toast.success(`Marked ${status}`);
+    toast.success(approve ? "Marked paid" : "Rejected — coins refunded");
     load();
   };
   return (
@@ -620,14 +622,20 @@ const WithdrawalsAdmin = () => {
           <div className="min-w-0 flex-1">
             <p className="font-medium text-foreground capitalize">{w.method} → {w.destination}</p>
             <p className="text-xs text-muted-foreground">User {w.user_id.slice(0, 8)} · {new Date(w.created_at).toLocaleString()} · {w.coins_amount} coins (${(w.cash_value_cents / 100).toFixed(2)})</p>
+            {w.admin_note && <p className="mt-1 text-xs text-muted-foreground">Note: {w.admin_note}</p>}
           </div>
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-secondary px-2 py-0.5 text-xs capitalize text-secondary-foreground">{w.status}</span>
-            {w.status !== "paid" && <Button size="sm" onClick={() => setStatus(w.id, "paid")}><Check className="mr-1 h-3.5 w-3.5" /> Mark paid</Button>}
-            {w.status !== "rejected" && <Button size="sm" variant="outline" onClick={() => setStatus(w.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Reject</Button>}
+            {w.status === "pending" && (
+              <>
+                <Button size="sm" onClick={() => review(w.id, true)}><Check className="mr-1 h-3.5 w-3.5" /> Mark paid</Button>
+                <Button size="sm" variant="outline" onClick={() => review(w.id, false)}><X className="mr-1 h-3.5 w-3.5" /> Reject</Button>
+              </>
+            )}
           </div>
         </div>
       ))}
+
     </div>
   );
 };
