@@ -82,18 +82,14 @@ const Dashboard = () => {
   }, [checking]);
 
   const votePoll = async (idx: number) => {
-    const { data: sess } = await supabase.auth.getSession();
-    if (!sess.session || !poll) return;
-    const uid = sess.session.user.id;
-    const { error } = await supabase.from("poll_votes").insert({
-      user_id: uid, poll_id: poll.id, option_index: idx,
-    });
-    if (error) return toast.error("Already voted today");
-    await awardCoins({ userId: uid, amount: poll.reward_coins, type: "poll", description: "Daily poll" });
+    if (!poll) return;
+    const { data: coins, error } = await supabase.rpc("vote_daily_poll", { _poll_id: poll.id, _option_index: idx });
+    if (error) return toast.error(error.message);
+    const earned = coins ?? 0;
     setPollVoted(true);
-    setBalance((b) => b + poll.reward_coins);
-    setTodayCoins((c) => c + poll.reward_coins);
-    toast.success(`+${poll.reward_coins} coins`);
+    setBalance((b) => b + earned);
+    setTodayCoins((c) => c + earned);
+    toast.success(`+${earned} coins`);
   };
 
   if (checking || loading) return <AppLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AppLayout>;
