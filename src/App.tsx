@@ -14,7 +14,7 @@ import Profile from "./pages/Profile.tsx";
 import Activity from "./pages/Activity.tsx";
 import Admin from "./pages/Admin.tsx";
 import Onboarding from "./pages/Onboarding.tsx";
-import SurveyReturn from "./pages/SurveyReturn.tsx";
+
 import ResetPassword from "./pages/ResetPassword.tsx";
 import GetPaidToWatchVideos from "./pages/GetPaidToWatchVideos.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -40,7 +40,7 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/survey/:id" element={<SurveyDetail />} />
-          <Route path="/survey-return" element={<SurveyReturn />} />
+          
           <Route path="/get-paid-to-watch-videos" element={<GetPaidToWatchVideos />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

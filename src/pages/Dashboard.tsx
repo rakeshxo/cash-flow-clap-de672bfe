@@ -32,13 +32,6 @@ const Dashboard = () => {
       if (!sess.session) return;
       const uid = sess.session.user.id;
 
-      // Reconcile any pending external-survey claims with the panel (safety net for missed redirects)
-      supabase.functions
-        .invoke("panel-sync", { body: { scope: "self" } })
-        .then(({ data }) => {
-          if ((data as { settled?: number } | null)?.settled) window.location.reload();
-        })
-        .catch(() => {});
 
 
 
