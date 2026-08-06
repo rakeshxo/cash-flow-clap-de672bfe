@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-// Settleable statuses are configured in the panel_status_mappings table (Admin → Panel statuses).
+const SETTLEABLE = new Set(["completed", "complete", "quotafull", "terminate", "terminated", "security"]);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -56,21 +56,6 @@ Deno.serve(async (req) => {
     }
     if (!claims?.length) return json({ checked: 0, settled: 0, results: [] });
 
-    const { data: mappings, error: mapErr } = await admin
-      .from("panel_status_mappings")
-      .select("panel_status, outcome")
-      .eq("enabled", true);
-    if (mapErr) {
-      console.error("panel-sync: mapping lookup failed:", mapErr.message);
-      return json({ error: "Could not load panel status mappings" }, 500);
-    }
-    const settleable = new Set(
-      (mappings ?? [])
-        .filter((m) => m.outcome !== "pending")
-        .map((m) => String(m.panel_status).toLowerCase().trim()),
-    );
-
-
     const results: Array<Record<string, unknown>> = [];
     let settled = 0;
 
@@ -98,7 +83,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      if (!panelStatus || !settleable.has(panelStatus)) {
+      if (!panelStatus || !SETTLEABLE.has(panelStatus)) {
         results.push({ tracking_uid: claim.tracking_uid, panel_status: panelStatus ?? "unknown" });
         continue;
       }
