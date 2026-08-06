@@ -100,7 +100,7 @@ const SurveyDetail = () => {
     });
   }, [id, navigate]);
 
-  // ----- In-app survey submit -----
+  // ----- In-app survey submit (validated & rewarded server-side) -----
   const submitInApp = async () => {
     if (!survey || !userId) return;
     if (Object.keys(answers).length < survey.questions.length) {
@@ -108,30 +108,20 @@ const SurveyDetail = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("survey_completions").insert({
-      user_id: userId,
-      survey_id: survey.id,
-      answers,
-      reward_cents: survey.reward_cents,
+    const { data: coins, error } = await supabase.rpc("complete_in_app_survey", {
+      _survey_id: survey.id,
+      _answers: answers,
     });
+    setSubmitting(false);
     if (error) {
-      setSubmitting(false);
       toast.error(error.message);
       return;
     }
-    await awardCoins({
-      userId,
-      amount: survey.reward_cents,
-      type: "survey",
-      description: `Completed: ${survey.title}`,
-      referenceId: survey.id,
-    });
-    setSubmitting(false);
     setStage("done");
-    toast.success(`+${survey.reward_cents} coins earned!`);
+    toast.success(`+${coins ?? survey.reward_cents} coins earned!`);
   };
 
-  // ----- Screener submit: create the pending claim with a unique UID, then unlock the link -----
+  // ----- Screener submit: graded server-side, claim + tracking UID created there -----
   const submitScreener = async () => {
     if (!survey || !userId) return;
     const sq = survey.screener_questions ?? [];
@@ -143,27 +133,19 @@ const SurveyDetail = () => {
       toast.error("Please answer all screener questions");
       return;
     }
-    const passed = sq.every((q, i) => {
-      if ((q.type ?? "choice") === "open") return true; // open answers always pass
-      return q.options?.[q.correct ?? 0] === answers[i];
-    });
-    if (!passed) {
-      setStage("screener_failed");
-      return;
-    }
     setSubmitting(true);
-    const uid = generateUid();
-    const { error } = await supabase.from("survey_claims").insert({
-      user_id: userId,
-      survey_id: survey.id,
-      screener_answers: answers,
-      reward_cents: survey.reward_cents,
-      link_opened_at: new Date().toISOString(),
-      status: "pending",
-      tracking_uid: uid,
+    const { data, error } = await supabase.rpc("start_external_survey", {
+      _survey_id: survey.id,
+      _answers: answers,
     });
     setSubmitting(false);
     if (error) return toast.error(error.message);
+    const res = (data ?? {}) as { passed?: boolean; tracking_uid?: string };
+    if (!res.passed) {
+      setStage("screener_failed");
+      return;
+    }
+    const uid = res.tracking_uid!;
     setTrackingUid(uid);
     setExternalUrl(survey.external_url ? buildSurveyUrl(survey.external_url, uid) : null);
     setStage("external_open");
