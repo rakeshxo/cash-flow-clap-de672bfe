@@ -99,8 +99,8 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <div className="mb-8 flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">Welcome back,</p>
-        <h1 className="font-display text-3xl font-bold capitalize text-foreground">{name}</h1>
+        <h1 className="font-display text-3xl font-bold text-foreground">User dashboard</h1>
+        <p className="text-sm capitalize text-muted-foreground">Welcome back, {name}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

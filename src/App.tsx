@@ -16,6 +16,7 @@ import Admin from "./pages/Admin.tsx";
 import Onboarding from "./pages/Onboarding.tsx";
 import SurveyReturn from "./pages/SurveyReturn.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import GetPaidToWatchVideos from "./pages/GetPaidToWatchVideos.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/survey/:id" element={<SurveyDetail />} />
           <Route path="/survey-return" element={<SurveyReturn />} />
+          <Route path="/get-paid-to-watch-videos" element={<GetPaidToWatchVideos />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
