@@ -108,7 +108,7 @@ const Auth = () => {
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!validate()) return;
-    if (mode === "login") {
+    if (mode === "signin") {
       const remaining = lockoutRemainingMs(email);
       if (remaining > 0) {
         return toast.error(
@@ -142,17 +142,27 @@ const Auth = () => {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
+        clearAttempts(email);
         toast.success("Welcome back!");
       }
     } catch (err: any) {
       const msg: string = err?.message ?? "Something went wrong";
-      toast.error(
-        /invalid login/i.test(msg)
-          ? "Incorrect email or password."
-          : /already registered/i.test(msg)
-          ? "That email already has an account — log in instead."
-          : msg
-      );
+      if (mode === "signin" && /invalid login/i.test(msg)) {
+        const { count, locked } = registerFailure(email);
+        toast.error(
+          locked
+            ? "Too many failed attempts. Sign-in is locked for 5 minutes."
+            : `Incorrect email or password. ${MAX_ATTEMPTS - count} attempt${MAX_ATTEMPTS - count === 1 ? "" : "s"} left.`,
+        );
+      } else {
+        toast.error(
+          /invalid login/i.test(msg)
+            ? "Incorrect email or password."
+            : /already registered/i.test(msg)
+            ? "That email already has an account — log in instead."
+            : msg
+        );
+      }
     } finally {
       setLoading(false);
     }
