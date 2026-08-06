@@ -23,13 +23,8 @@ type Survey = {
 
 type Stage = "loading" | "screener" | "in_app" | "screener_failed" | "external_open" | "submitted" | "done";
 
-// Generate a short, URL-safe unique ID (~22 chars, ~128 bits of entropy)
-const generateUid = () => {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-};
+
+
 
 // Substitute UID into the survey URL.
 // - Replaces literal "XXX" (case-sensitive) if present
