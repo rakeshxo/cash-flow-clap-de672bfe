@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const SETTLEABLE = new Set(["completed", "complete", "quotafull", "terminate", "terminated", "security"]);
+// Settleable statuses are configured in the panel_status_mappings table (Admin → Panel statuses).
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
