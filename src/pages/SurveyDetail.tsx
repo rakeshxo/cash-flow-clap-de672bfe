@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Coins, ArrowLeft, CheckCircle2, ExternalLink, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { awardCoins } from "@/lib/coins";
+
 
 type Question = { q: string; options: string[] };
 type ScreenerQuestion = { q: string; type?: "choice" | "open"; options?: string[]; correct?: number };

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2, Mail, ArrowLeft, Check } from "lucide-react";
 import { z } from "zod";
-import { awardCoins } from "@/lib/coins";
+
 import logo from "@/assets/logo.png";
 
 const REFERRAL_BONUS = 250;
@@ -62,32 +62,10 @@ const Auth = () => {
     return s;
   }, [password]);
 
-  const handleReferral = async (newUserId: string) => {
+  const handleReferral = async () => {
     if (!refCode) return;
-    const { data: referrer } = await supabase
-      .from("profiles")
-      .select("user_id")
-      .eq("referral_code", refCode)
-      .maybeSingle();
-    if (!referrer || referrer.user_id === newUserId) return;
-    await supabase.from("profiles").update({ referred_by: referrer.user_id }).eq("user_id", newUserId);
-    await supabase.from("referrals").insert({
-      referrer_id: referrer.user_id,
-      referred_id: newUserId,
-      bonus_paid: true,
-    });
-    await awardCoins({
-      userId: referrer.user_id,
-      amount: REFERRAL_BONUS,
-      type: "referral",
-      description: "Friend joined via your link",
-    });
-    await awardCoins({
-      userId: newUserId,
-      amount: 100,
-      type: "bonus",
-      description: "Welcome bonus from referral",
-    });
+    // Referral validation + bonus payout happen server-side.
+    await supabase.rpc("claim_referral", { _ref_code: refCode });
   };
 
   const validate = () => {
