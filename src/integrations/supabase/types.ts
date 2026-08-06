@@ -837,6 +837,7 @@ export type Database = {
         Args: { _grant: boolean; _user_id: string }
         Returns: undefined
       }
+      award_offer_activation: { Args: { _offer_id: string }; Returns: number }
       award_video_watch: { Args: { _video_id: string }; Returns: number }
       claim_daily_streak: { Args: never; Returns: Json }
       claim_referral: { Args: { _ref_code: string }; Returns: boolean }
@@ -895,6 +896,7 @@ export type Database = {
         Returns: undefined
       }
       internal_require_admin: { Args: never; Returns: string }
+      request_redemption: { Args: { _reward_id: string }; Returns: string }
       request_withdrawal: {
         Args: { _coins: number; _destination: string; _method: string }
         Returns: string
