@@ -83,6 +83,14 @@ const Auth = () => {
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!validate()) return;
+    if (mode === "login") {
+      const remaining = lockoutRemainingMs(email);
+      if (remaining > 0) {
+        return toast.error(
+          `Too many failed attempts. Try again in ${Math.ceil(remaining / 1000)}s or reset your password.`,
+        );
+      }
+    }
     setLoading(true);
     try {
       if (mode === "forgot") {
