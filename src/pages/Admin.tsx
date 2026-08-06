@@ -7,8 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { DataState } from "@/components/DataState";
+import { friendlyError, toastError, withRetry } from "@/lib/errors";
+import { OverviewAdmin } from "@/components/admin/OverviewAdmin";
+import { AuditLogAdmin } from "@/components/admin/AuditLogAdmin";
+import { SecurityEventsAdmin } from "@/components/admin/SecurityEventsAdmin";
 
 import { Shield, Plus, Trash2, Pencil, X, Check, ExternalLink } from "lucide-react";
 import { AGE_RANGES, GENDERS, EMPLOYMENT, INCOME, MARITAL, EDUCATION } from "@/lib/surveyTargeting";
