@@ -142,7 +142,27 @@ const Withdraw = () => {
         </div>
       </div>
 
-      {!canWithdraw && (
+      {blocked && (
+        <div className="mb-6 rounded-2xl border border-destructive/40 bg-destructive/10 p-6">
+          <p className="font-display font-bold text-destructive">
+            {accountStatus === "suspended" ? "Withdrawals disabled" : "Withdrawals paused during review"}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {accountReason || "Our team is reviewing your account. This usually completes within 48 hours."}
+          </p>
+        </div>
+      )}
+
+      {pendingExists && !blocked && (
+        <div className="mb-6 rounded-2xl border border-border bg-card p-6 shadow-card">
+          <p className="font-display font-bold text-foreground">You have a pending withdrawal</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Only one request can be open at a time. You can submit a new one once this payout is processed.
+          </p>
+        </div>
+      )}
+
+      {balance < MIN_WITHDRAW && (
         <div className="mb-6 rounded-2xl border border-border bg-card p-6 shadow-card">
           <p className="font-display font-bold text-foreground">
             You need {formatCoins(MIN_WITHDRAW - balance)} more coins to withdraw.
@@ -185,7 +205,11 @@ const Withdraw = () => {
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
               placeholder={selectedMethod.placeholder}
+              maxLength={200}
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              A payout destination can only be linked to one account.
+            </p>
           </div>
 
           <div>
@@ -195,39 +219,71 @@ const Withdraw = () => {
               min={MIN_WITHDRAW}
               max={balance}
               value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+              onChange={(e) => setAmount(Math.floor(Number(e.target.value) || 0))}
             />
             <p className="mt-1 text-xs text-muted-foreground">≈ {coinsToCash(amount)}</p>
           </div>
 
-          <Button onClick={submit} disabled={!canWithdraw || submitting} className="w-full" size="lg">
+          <Button onClick={openConfirm} disabled={!canWithdraw || submitting} className="w-full" size="lg">
             <Coins className="mr-2 h-4 w-4" />
             {submitting ? "Submitting..." : `Withdraw ${formatCoins(amount)} coins (${coinsToCash(amount)})`}
           </Button>
+          <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <ShieldCheck className="h-3.5 w-3.5" /> Every payout is logged and manually reviewed before it is sent.
+          </p>
         </div>
       </div>
 
-      {history.length > 0 && (
-        <>
-          <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Withdrawal history</h2>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-            {history.map((h) => (
-              <div key={h.id} className="flex items-center justify-between border-b border-border p-4 last:border-0">
-                <div>
-                  <p className="font-medium text-foreground capitalize">{h.method} — {h.destination}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(h.created_at).toLocaleString()}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-display font-bold text-foreground">-{formatCoins(h.coins_amount)}</p>
-                  <span className="rounded-full bg-secondary px-2 py-0.5 text-xs capitalize text-secondary-foreground">{h.status}</span>
-                </div>
+      <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Withdrawal history</h2>
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        <DataState
+          loading={loading}
+          error={loadError}
+          empty={history.length === 0}
+          emptyText="No withdrawals yet."
+          loadingText="Loading your payouts..."
+          onRetry={() => userId && refresh(userId)}
+        >
+          {history.map((h) => (
+            <div key={h.id} className="flex items-center justify-between border-b border-border p-4 last:border-0">
+              <div className="min-w-0">
+                <p className="truncate font-medium capitalize text-foreground">{h.method} — {h.destination}</p>
+                <p className="text-xs text-muted-foreground">{new Date(h.created_at).toLocaleString()}</p>
+                {h.admin_note && <p className="mt-1 text-xs text-muted-foreground">Note: {h.admin_note}</p>}
               </div>
-            ))}
-          </div>
-        </>
-      )}
+              <div className="text-right">
+                <p className="font-display font-bold text-foreground">-{formatCoins(h.coins_amount)}</p>
+                <span className="rounded-full bg-secondary px-2 py-0.5 text-xs capitalize text-secondary-foreground">{h.status}</span>
+              </div>
+            </div>
+          ))}
+        </DataState>
+      </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm your payout</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Sending <strong>{formatCoins(amount)} coins ({coinsToCash(amount)})</strong> via{" "}
+                  <strong className="capitalize">{method}</strong> to:
+                </p>
+                <p className="break-all rounded-lg bg-secondary p-2 font-mono text-xs">{destination.trim()}</p>
+                <p>Double-check this destination — payouts sent to a wrong address cannot be recovered.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={submit}>Confirm withdrawal</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 };
+
 
 export default Withdraw;
