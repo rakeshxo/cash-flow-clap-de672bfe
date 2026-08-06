@@ -56,6 +56,21 @@ Deno.serve(async (req) => {
     }
     if (!claims?.length) return json({ checked: 0, settled: 0, results: [] });
 
+    const { data: mappings, error: mapErr } = await admin
+      .from("panel_status_mappings")
+      .select("panel_status, outcome")
+      .eq("enabled", true);
+    if (mapErr) {
+      console.error("panel-sync: mapping lookup failed:", mapErr.message);
+      return json({ error: "Could not load panel status mappings" }, 500);
+    }
+    const settleable = new Set(
+      (mappings ?? [])
+        .filter((m) => m.outcome !== "pending")
+        .map((m) => String(m.panel_status).toLowerCase().trim()),
+    );
+
+
     const results: Array<Record<string, unknown>> = [];
     let settled = 0;
 
