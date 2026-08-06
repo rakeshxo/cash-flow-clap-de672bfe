@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_is_admin: boolean
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_is_admin?: boolean
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_is_admin?: boolean
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       coin_transactions: {
         Row: {
           amount: number
@@ -206,6 +242,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string
           age_range: string | null
           avatar_url: string | null
           background_completed: boolean
@@ -224,13 +261,17 @@ export type Database = {
           interests: string[] | null
           job_title: string | null
           last_active_date: string | null
+          last_seen_at: string | null
           marital_status: string | null
           referral_code: string | null
           referred_by: string | null
+          risk_score: number
           shopping_habits: string[] | null
+          suspended_reason: string | null
           user_id: string
         }
         Insert: {
+          account_status?: string
           age_range?: string | null
           avatar_url?: string | null
           background_completed?: boolean
@@ -249,13 +290,17 @@ export type Database = {
           interests?: string[] | null
           job_title?: string | null
           last_active_date?: string | null
+          last_seen_at?: string | null
           marital_status?: string | null
           referral_code?: string | null
           referred_by?: string | null
+          risk_score?: number
           shopping_habits?: string[] | null
+          suspended_reason?: string | null
           user_id: string
         }
         Update: {
+          account_status?: string
           age_range?: string | null
           avatar_url?: string | null
           background_completed?: boolean
@@ -274,11 +319,38 @@ export type Database = {
           interests?: string[] | null
           job_title?: string | null
           last_active_date?: string | null
+          last_seen_at?: string | null
           marital_status?: string | null
           referral_code?: string | null
           referred_by?: string | null
+          risk_score?: number
           shopping_habits?: string[] | null
+          suspended_reason?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          action: string
+          count: number
+          id: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          action: string
+          count?: number
+          id?: string
+          user_id: string
+          window_start: string
+        }
+        Update: {
+          action?: string
+          count?: number
+          id?: string
+          user_id?: string
+          window_start?: string
         }
         Relationships: []
       }
@@ -374,6 +446,42 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          detail: Json
+          event_type: string
+          id: string
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          event_type: string
+          id?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          event_type?: string
+          id?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -648,6 +756,7 @@ export type Database = {
       }
       withdrawals: {
         Row: {
+          admin_note: string | null
           cash_value_cents: number
           coins_amount: number
           created_at: string
@@ -655,10 +764,13 @@ export type Database = {
           id: string
           method: string
           processed_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           user_id: string
         }
         Insert: {
+          admin_note?: string | null
           cash_value_cents: number
           coins_amount: number
           created_at?: string
@@ -666,10 +778,13 @@ export type Database = {
           id?: string
           method: string
           processed_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           user_id: string
         }
         Update: {
+          admin_note?: string | null
           cash_value_cents?: number
           coins_amount?: number
           created_at?: string
@@ -677,6 +792,8 @@ export type Database = {
           id?: string
           method?: string
           processed_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           user_id?: string
         }
@@ -695,8 +812,29 @@ export type Database = {
       }
     }
     Functions: {
+      admin_adjust_coins: {
+        Args: { _amount: number; _reason: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_platform_stats: { Args: never; Returns: Json }
+      admin_resolve_security_event: {
+        Args: { _event_id: string }
+        Returns: undefined
+      }
       admin_review_survey_claim: {
         Args: { _approve: boolean; _claim_id: string }
+        Returns: undefined
+      }
+      admin_review_withdrawal: {
+        Args: { _approve: boolean; _note?: string; _withdrawal_id: string }
+        Returns: undefined
+      }
+      admin_set_account_status: {
+        Args: { _reason?: string; _status: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_set_admin_role: {
+        Args: { _grant: boolean; _user_id: string }
         Returns: undefined
       }
       award_video_watch: { Args: { _video_id: string }; Returns: number }
@@ -713,6 +851,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      internal_audit: {
+        Args: {
+          _action: string
+          _entity_id?: string
+          _entity_type?: string
+          _metadata?: Json
+          _target_user_id?: string
+        }
+        Returns: undefined
+      }
       internal_award_coins: {
         Args: {
           _amount: number
@@ -724,6 +872,29 @@ export type Database = {
         }
         Returns: undefined
       }
+      internal_log_security_event: {
+        Args: {
+          _detail?: Json
+          _event_type: string
+          _severity?: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      internal_rate_limit: {
+        Args: {
+          _action: string
+          _max: number
+          _user_id: string
+          _window: string
+        }
+        Returns: undefined
+      }
+      internal_require_active: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      internal_require_admin: { Args: never; Returns: string }
       request_withdrawal: {
         Args: { _coins: number; _destination: string; _method: string }
         Returns: string

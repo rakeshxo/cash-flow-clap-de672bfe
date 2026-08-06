@@ -17,6 +17,10 @@ import {
 import { toast } from "sonner";
 import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useIdleLogout } from "@/hooks/useIdleLogout";
+import { useAccountStatus } from "@/hooks/useAccountStatus";
+import { AlertTriangle } from "lucide-react";
+
 
 const navItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
@@ -28,9 +32,13 @@ const navItems = [
 export const AppLayout = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { isAdmin } = useIsAdmin();
+  const { status, reason } = useAccountStatus();
   const [balance, setBalance] = useState(0);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
+
+  useIdleLogout();
+
 
   const items = isAdmin
     ? [...navItems, { to: "/admin", label: "Admin", icon: Shield }]
@@ -175,7 +183,31 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         </div>
       )}
 
+      {status !== "active" && (
+        <div
+          className={`border-b px-4 py-3 text-sm ${
+            status === "suspended"
+              ? "border-destructive/40 bg-destructive/10 text-destructive"
+              : "border-accent/40 bg-accent/10 text-accent"
+          }`}
+        >
+          <div className="container mx-auto flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              <strong className="font-semibold">
+                {status === "suspended" ? "Account suspended." : "Account under review."}
+              </strong>{" "}
+              {reason ||
+                (status === "suspended"
+                  ? "Earning and withdrawals are disabled. Contact support."
+                  : "You can keep earning, but withdrawals are paused until the review completes.")}
+            </p>
+          </div>
+        </div>
+      )}
+
       <main className="container mx-auto px-4 py-8">{children}</main>
+
     </div>
   );
 };
