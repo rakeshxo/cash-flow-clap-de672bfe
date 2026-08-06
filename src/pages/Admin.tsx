@@ -22,6 +22,7 @@ import { friendlyError, toastError, withRetry } from "@/lib/errors";
 import { OverviewAdmin } from "@/components/admin/OverviewAdmin";
 import { AuditLogAdmin } from "@/components/admin/AuditLogAdmin";
 import { SecurityEventsAdmin } from "@/components/admin/SecurityEventsAdmin";
+import { PanelStatusAdmin } from "@/components/admin/PanelStatusAdmin";
 
 import { Shield, Plus, Trash2, Pencil, X, Check, ExternalLink } from "lucide-react";
 import { AGE_RANGES, GENDERS, EMPLOYMENT, INCOME, MARITAL, EDUCATION } from "@/lib/surveyTargeting";
