@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      if (!panelStatus || !SETTLEABLE.has(panelStatus)) {
+      if (!panelStatus || !settleable.has(panelStatus)) {
         results.push({ tracking_uid: claim.tracking_uid, panel_status: panelStatus ?? "unknown" });
         continue;
       }
