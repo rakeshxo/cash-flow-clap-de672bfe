@@ -10,6 +10,7 @@ import { Eye, EyeOff, Loader2, Mail, ArrowLeft, Check } from "lucide-react";
 import { z } from "zod";
 
 import logo from "@/assets/logo.png";
+import Seo from "@/components/Seo";
 
 const REFERRAL_BONUS = 250;
 
@@ -76,6 +77,8 @@ const Auth = () => {
       if (data.session) navigate("/dashboard", { replace: true });
     });
     return () => sub.subscription.unsubscribe();
+    <>
+    <Seo title="Log In or Sign Up — Survey Paradox" description="Create a free Survey Paradox account or log in to start earning coins from paid surveys and videos." path="/auth" />
   }, [navigate]);
 
   const strength = useMemo(() => {
@@ -366,6 +369,7 @@ const Auth = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

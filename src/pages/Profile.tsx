@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { coinsToCash, formatCoins } from "@/lib/coins";
 import { Coins } from "lucide-react";
+import Seo from "@/components/Seo";
 
 const Profile = () => {
   const [email, setEmail] = useState("");
@@ -48,6 +49,7 @@ const Profile = () => {
 
   return (
     <AppLayout>
+      <Seo title="Your Profile — Survey Paradox" description="Manage your Survey Paradox account details and background profile to get better matched surveys." path="/profile" noindex />
       <h1 className="mb-8 font-display text-3xl font-bold text-foreground">Profile</h1>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

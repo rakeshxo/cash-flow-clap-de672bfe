@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, Coins, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import Seo from "@/components/Seo";
 
 
 const Videos = () => {
@@ -50,8 +51,11 @@ const Videos = () => {
 
   return (
     <AppLayout>
+      <Seo title="Watch Videos & Earn Coins — Survey Paradox" description="Watch short videos on Survey Paradox and earn coins for every clip you finish. Cash out real money from 500 coins." path="/videos" noindex />
       <h1 className="mb-2 font-display text-3xl font-bold text-foreground">Watch & earn</h1>
       <p className="mb-8 text-muted-foreground">Watch short videos to earn coins.</p>
+
+      <h2 className="mb-4 font-display text-xl font-bold text-foreground">Available videos</h2>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         {videos.map((v) => {
