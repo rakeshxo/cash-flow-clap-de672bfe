@@ -245,15 +245,27 @@ const Withdraw = () => {
             <p className="mt-1 text-xs text-muted-foreground">≈ {coinsToCash(amount)}</p>
           </div>
 
-          <Button onClick={openConfirm} disabled={!canWithdraw || submitting} className="w-full" size="lg">
+          {needsKyc && (
+            <p className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              Payouts above {KYC_COIN_THRESHOLD.toLocaleString()} coins require identity verification. Complete it below
+              first.
+            </p>
+          )}
+
+          <Button onClick={openConfirm} disabled={!canWithdraw || submitting || needsKyc} className="w-full" size="lg">
             <Coins className="mr-2 h-4 w-4" />
             {submitting ? "Submitting..." : `Withdraw ${formatCoins(amount)} coins (${coinsToCash(amount)})`}
           </Button>
           <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5" /> Every payout is logged and manually reviewed before it is sent.
+            <ShieldCheck className="h-3.5 w-3.5" /> Every payout is logged, screened for VPN/proxy use and manually
+            reviewed before it is sent.
           </p>
         </div>
       </div>
+
+      <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Identity verification</h2>
+      <KycPanel onStatusChange={setKycStatus} />
+
 
       <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Withdrawal history</h2>
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
