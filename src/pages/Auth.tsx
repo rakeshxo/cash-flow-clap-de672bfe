@@ -166,18 +166,23 @@ const Auth = () => {
           setSent(true);
           toast.success("Check your email to confirm your account.");
         } else {
+          runTrustChecks("signup");
           toast.success("Account created! You're in.");
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
         clearAttempts(email);
+        setFailures(0);
+        runTrustChecks("login");
         toast.success("Welcome back!");
       }
     } catch (err: any) {
       const msg: string = err?.message ?? "Something went wrong";
       if (mode === "signin" && /invalid login/i.test(msg)) {
         const { count, locked } = registerFailure(email);
+        setFailures((f) => f + 1);
+        setHumanOk(false);
         toast.error(
           locked
             ? "Too many failed attempts. Sign-in is locked for 5 minutes."
