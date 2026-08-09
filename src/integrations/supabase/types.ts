@@ -292,6 +292,99 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_batch_items: {
+        Row: {
+          batch_id: string
+          coins_amount: number
+          created_at: string
+          error: string | null
+          id: string
+          status: string
+          user_id: string
+          withdrawal_id: string
+        }
+        Insert: {
+          batch_id: string
+          coins_amount: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          status?: string
+          user_id: string
+          withdrawal_id: string
+        }
+        Update: {
+          batch_id?: string
+          coins_amount?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          status?: string
+          user_id?: string
+          withdrawal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_batch_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "payout_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_batch_items_withdrawal_id_fkey"
+            columns: ["withdrawal_id"]
+            isOneToOne: false
+            referencedRelation: "withdrawals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_batches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          item_count: number
+          label: string
+          note: string | null
+          processed_at: string | null
+          processed_by: string | null
+          scheduled_for: string | null
+          status: string
+          total_coins: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_count?: number
+          label: string
+          note?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          scheduled_for?: string | null
+          status?: string
+          total_coins?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_count?: number
+          label?: string
+          note?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          scheduled_for?: string | null
+          status?: string
+          total_coins?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       poll_votes: {
         Row: {
           id: string
@@ -948,6 +1041,45 @@ export type Database = {
         Args: { _amount: number; _reason: string; _user_id: string }
         Returns: undefined
       }
+      admin_bulk_adjust_coins: {
+        Args: { _amount: number; _reason: string; _user_ids: string[] }
+        Returns: Json
+      }
+      admin_bulk_review_survey_claims: {
+        Args: { _approve: boolean; _ids: string[] }
+        Returns: Json
+      }
+      admin_bulk_review_withdrawals: {
+        Args: { _approve: boolean; _ids: string[]; _note?: string }
+        Returns: Json
+      }
+      admin_cancel_payout_batch: {
+        Args: { _batch_id: string }
+        Returns: undefined
+      }
+      admin_create_payout_batch: {
+        Args: {
+          _label: string
+          _scheduled_for?: string
+          _withdrawal_ids: string[]
+        }
+        Returns: string
+      }
+      admin_earnings_report: {
+        Args: { _threshold_cents?: number; _year: number }
+        Returns: {
+          adjustments_cents: number
+          balance_cents: number
+          country: string
+          display_name: string
+          gross_earned_cents: number
+          kyc_status: string
+          paid_out_cents: number
+          pending_cents: number
+          reportable: boolean
+          user_id: string
+        }[]
+      }
       admin_platform_stats: { Args: never; Returns: Json }
       admin_resolve_security_event: {
         Args: { _event_id: string }
@@ -965,12 +1097,17 @@ export type Database = {
         Args: { _approve: boolean; _note?: string; _withdrawal_id: string }
         Returns: undefined
       }
+      admin_run_payout_batch: { Args: { _batch_id: string }; Returns: Json }
       admin_set_account_status: {
         Args: { _reason?: string; _status: string; _user_id: string }
         Returns: undefined
       }
       admin_set_admin_role: {
         Args: { _grant: boolean; _user_id: string }
+        Returns: undefined
+      }
+      admin_set_user_role: {
+        Args: { _grant: boolean; _role: string; _user_id: string }
         Returns: undefined
       }
       award_offer_activation: { Args: { _offer_id: string }; Returns: number }
@@ -986,6 +1123,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_staff_role: {
+        Args: { _roles: string[]; _user_id: string }
         Returns: boolean
       }
       internal_audit: {
@@ -1045,6 +1186,27 @@ export type Database = {
         Returns: undefined
       }
       internal_require_admin: { Args: never; Returns: string }
+      internal_require_staff: { Args: { _roles: string[] }; Returns: string }
+      internal_run_payout_batch: {
+        Args: { _actor: string; _batch_id: string }
+        Returns: Json
+      }
+      internal_settle_survey_claim: {
+        Args: { _actor: string; _approve: boolean; _claim_id: string }
+        Returns: undefined
+      }
+      internal_settle_withdrawal: {
+        Args: {
+          _actor: string
+          _approve: boolean
+          _note: string
+          _withdrawal_id: string
+        }
+        Returns: undefined
+      }
+      my_earnings_report: { Args: { _year: number }; Returns: Json }
+      my_roles: { Args: never; Returns: string[] }
+      process_due_payout_batches: { Args: never; Returns: number }
       register_device: {
         Args: {
           _fingerprint: string
@@ -1080,7 +1242,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role:
+        | "admin"
+        | "user"
+        | "moderator"
+        | "support"
+        | "finance"
+        | "reviewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1208,7 +1376,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: [
+        "admin",
+        "user",
+        "moderator",
+        "support",
+        "finance",
+        "reviewer",
+      ],
     },
   },
 } as const
