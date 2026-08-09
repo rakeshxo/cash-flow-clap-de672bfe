@@ -372,10 +372,24 @@ const Auth = () => {
                   </div>
                 )}
 
-                <Button type="submit" className="h-11 w-full text-base shadow-glow" disabled={loading}>
+                {requiresCaptcha && (
+                  <HumanCheck
+                    key={`${mode}-${failures}`}
+                    verified={humanOk}
+                    onVerifiedChange={setHumanOk}
+                    label={mode === "signin" ? "Extra check after failed attempts" : "Quick human check"}
+                  />
+                )}
+
+                <Button
+                  type="submit"
+                  className="h-11 w-full text-base shadow-glow"
+                  disabled={loading || (requiresCaptcha && !humanOk)}
+                >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {mode === "signin" ? "Log in" : mode === "signup" ? "Create account" : "Send reset link"}
                 </Button>
+
               </form>
 
               {mode === "signup" && (
