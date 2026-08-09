@@ -12,7 +12,7 @@ const Terms = () => {
   const updated = "August 2026";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Seo
         title="Terms of Service | Survey Paradox"
         description="The rules for using Survey Paradox: accounts, earning coins, withdrawals, fair use, and account suspension."

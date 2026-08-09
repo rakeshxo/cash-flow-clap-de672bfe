@@ -16,7 +16,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden font-sans">
+    <div className="relative min-h-dvh overflow-hidden font-sans">
       <Seo
         title="Survey Paradox — Earn Cash Completing Surveys"
         description="Take quick paid surveys, watch videos, and answer daily polls to earn coins on Survey Paradox. Cash out to PayPal, bank, or crypto from 500 coins."

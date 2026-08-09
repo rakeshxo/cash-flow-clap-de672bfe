@@ -12,7 +12,7 @@ const steps = [
 
 const GetPaidToWatchVideos = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Seo
         title="Get Paid to Watch Videos — Survey Paradox"
         description="Get paid to watch videos online. Earn coins for every clip you finish on Survey Paradox and withdraw real cash to PayPal, bank, or crypto from 500 coins."

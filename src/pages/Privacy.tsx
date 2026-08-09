@@ -12,7 +12,7 @@ const Privacy = () => {
   const updated = "August 2026";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Seo
         title="Privacy Policy | Survey Paradox"
         description="How Survey Paradox collects, uses, and protects your personal data when you take surveys and earn rewards."

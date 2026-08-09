@@ -107,14 +107,14 @@ const Onboarding = () => {
   };
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+    return <div className="flex min-h-dvh items-center justify-center text-muted-foreground">Loading...</div>;
   }
 
   const totalSteps = 4;
   const pct = Math.round(((step - 1) / totalSteps) * 100);
 
   return (
-    <div className="min-h-screen bg-gradient-soft px-4 py-10 font-sans">
+    <div className="min-h-dvh bg-gradient-soft px-4 py-10 font-sans">
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-6 flex items-center justify-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-hero shadow-glow">

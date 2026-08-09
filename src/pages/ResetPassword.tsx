@@ -44,7 +44,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center p-4 font-sans">
+    <div className="relative flex min-h-dvh items-center justify-center p-4 font-sans">
       <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
       <main className="relative w-full max-w-md animate-fade-in">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
