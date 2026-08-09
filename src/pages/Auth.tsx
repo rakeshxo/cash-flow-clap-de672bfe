@@ -13,7 +13,7 @@ import logo from "@/assets/logo.png";
 import Seo from "@/components/Seo";
 import { HumanCheck } from "@/components/HumanCheck";
 import { registerCurrentDevice, runNetworkCheck } from "@/lib/deviceTrust";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const REFERRAL_BONUS = 250;
 
