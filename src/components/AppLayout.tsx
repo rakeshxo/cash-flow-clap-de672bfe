@@ -155,48 +155,40 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         </div>
       </header>
 
-      {open && (
-        <div className="fixed inset-0 z-50 md:hidden" onClick={() => setOpen(false)}>
-          <div className="absolute inset-0 bg-foreground/40" />
-          <aside
-            className="absolute left-0 top-0 h-full w-72 bg-card p-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <span className="font-display text-lg font-bold">Menu</span>
-              <button onClick={() => setOpen(false)} aria-label="Close">
-                <X className="h-5 w-5" />
-              </button>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="left" id="mobile-nav" className="w-72 bg-card p-4 md:hidden">
+          <SheetHeader className="mb-4 text-left">
+            <SheetTitle className="font-display text-lg font-bold">Menu</SheetTitle>
+          </SheetHeader>
+          <div className="mb-4 flex items-center gap-2 rounded-xl bg-gradient-hero p-3 text-primary-foreground">
+            <Coins className="h-5 w-5" aria-hidden />
+            <div>
+              <p className="text-xs opacity-90" id="balance-label-mobile">Balance</p>
+              <p className="font-display text-lg font-bold" aria-labelledby="balance-label-mobile">
+                {formatCoins(balance)} ({coinsToCash(balance)})
+              </p>
             </div>
-            <div className="mb-4 flex items-center gap-2 rounded-xl bg-gradient-hero p-3 text-primary-foreground">
-              <Coins className="h-5 w-5" />
-              <div>
-                <p className="text-xs opacity-90">Balance</p>
-                <p className="font-display text-lg font-bold">
-                  {formatCoins(balance)} ({coinsToCash(balance)})
-                </p>
-              </div>
-            </div>
-            <nav className="flex flex-col gap-1">
-              {items.map((n) => (
-                <NavLink
-                  key={n.to}
-                  to={n.to}
-                  onClick={() => setOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium ${
-                      isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
-                    }`
-                  }
-                >
-                  <n.icon className="h-4 w-4" />
-                  {n.label}
-                </NavLink>
-              ))}
-            </nav>
-          </aside>
-        </div>
-      )}
+          </div>
+          <nav className="flex flex-col gap-1" aria-label="Main">
+            {items.map((n) => (
+              <NavLink
+                key={n.to}
+                to={n.to}
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium ${
+                    isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
+                  }`
+                }
+              >
+                <n.icon className="h-4 w-4" aria-hidden />
+                {n.label}
+              </NavLink>
+            ))}
+          </nav>
+        </SheetContent>
+      </Sheet>
+
 
       {status !== "active" && (
         <div
