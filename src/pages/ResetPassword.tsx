@@ -107,7 +107,7 @@ const ResetPassword = () => {
             Back to login
           </Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
