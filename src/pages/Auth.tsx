@@ -11,6 +11,8 @@ import { z } from "zod";
 
 import logo from "@/assets/logo.png";
 import Seo from "@/components/Seo";
+import { HumanCheck } from "@/components/HumanCheck";
+import { registerCurrentDevice, runNetworkCheck } from "@/lib/deviceTrust";
 
 const REFERRAL_BONUS = 250;
 
