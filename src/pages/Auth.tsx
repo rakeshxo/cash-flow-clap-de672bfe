@@ -244,6 +244,10 @@ const Auth = () => {
           </span>
         </Link>
 
+        <div className="mb-4 flex justify-center">
+          <LanguageSwitcher />
+        </div>
+
         <div className="glass-panel rounded-xl p-8 shadow-card border-neon">
           {sent ? (
             <div className="text-center">

@@ -21,17 +21,20 @@ import { useIdleLogout } from "@/hooks/useIdleLogout";
 import { useDeviceTrust } from "@/hooks/useDeviceTrust";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
 import { AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 
 const navItems = [
-  { to: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { to: "/earn", label: "Earn", icon: Sparkles },
-  { to: "/withdraw", label: "Withdraw", icon: Wallet },
-  { to: "/profile", label: "Profile", icon: UserIcon },
+  { to: "/dashboard", labelKey: "nav.home", icon: LayoutDashboard },
+  { to: "/earn", labelKey: "nav.earn", icon: Sparkles },
+  { to: "/withdraw", labelKey: "nav.withdraw", icon: Wallet },
+  { to: "/profile", labelKey: "nav.profile", icon: UserIcon },
 ];
 
 export const AppLayout = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { isStaff: isAdmin } = useStaffRoles();
   const { status, reason } = useAccountStatus();
   const [balance, setBalance] = useState(0);
@@ -45,7 +48,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
 
 
   const items = isAdmin
-    ? [...navItems, { to: "/admin", label: "Admin", icon: Shield }]
+    ? [...navItems, { to: "/admin", labelKey: "nav.admin", icon: Shield }]
     : navItems;
 
   useEffect(() => {
@@ -82,7 +85,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-card focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        Skip to main content
+        {t("nav.skip")}
       </a>
       <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur">
         <div className="container mx-auto flex items-center justify-between gap-3 py-3">
@@ -90,7 +93,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             <button
               className="rounded-lg p-2 hover:bg-secondary md:hidden"
               onClick={() => setOpen(true)}
-              aria-label="Open menu"
+              aria-label={t("nav.openMenu")}
               aria-expanded={open}
               aria-controls="mobile-nav"
             >
@@ -118,7 +121,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
                 }
               >
                 <n.icon className="h-4 w-4" />
-                {n.label}
+                {t(n.labelKey)}
               </NavLink>
             ))}
           </nav>
@@ -127,7 +130,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             <Link
               to="/activity"
               className="relative rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
-              aria-label={unread > 0 ? `Activity, ${unread} unread` : "Activity"}
+              aria-label={unread > 0 ? `${t("nav.notifications")}, ${unread}` : t("nav.notifications")}
             >
               <Bell className="h-5 w-5" aria-hidden />
               {unread > 0 && (
@@ -142,13 +145,14 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             <div className="hidden items-center gap-2 rounded-xl bg-gradient-hero px-3 py-1.5 text-primary-foreground shadow-glow sm:flex">
               <Coins className="h-4 w-4" aria-hidden />
               <div className="leading-tight">
-                <p className="text-[10px] opacity-90" id="balance-label">Balance</p>
+                <p className="text-[10px] opacity-90" id="balance-label">{t("nav.balance")}</p>
                 <p className="font-display text-sm font-bold" aria-labelledby="balance-label" aria-live="polite">
                   {formatCoins(balance)} <span className="text-[10px] opacity-90">({coinsToCash(balance)})</span>
                 </p>
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={signOut} aria-label="Log out">
+            <LanguageSwitcher className="hidden lg:flex" />
+            <Button variant="ghost" size="icon" onClick={signOut} aria-label={t("nav.signOut")}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -158,12 +162,12 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" id="mobile-nav" className="w-72 bg-card p-4 md:hidden">
           <SheetHeader className="mb-4 text-left">
-            <SheetTitle className="font-display text-lg font-bold">Menu</SheetTitle>
+            <SheetTitle className="font-display text-lg font-bold">{t("nav.menu")}</SheetTitle>
           </SheetHeader>
           <div className="mb-4 flex items-center gap-2 rounded-xl bg-gradient-hero p-3 text-primary-foreground">
             <Coins className="h-5 w-5" aria-hidden />
             <div>
-              <p className="text-xs opacity-90" id="balance-label-mobile">Balance</p>
+              <p className="text-xs opacity-90" id="balance-label-mobile">{t("nav.balance")}</p>
               <p className="font-display text-lg font-bold" aria-labelledby="balance-label-mobile">
                 {formatCoins(balance)} ({coinsToCash(balance)})
               </p>
@@ -182,10 +186,13 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
                 }
               >
                 <n.icon className="h-4 w-4" aria-hidden />
-                {n.label}
+                {t(n.labelKey)}
               </NavLink>
             ))}
           </nav>
+          <div className="mt-6 border-t border-border pt-4">
+            <LanguageSwitcher />
+          </div>
         </SheetContent>
       </Sheet>
 
