@@ -136,6 +136,7 @@ const Auth = () => {
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!validate()) return;
+    if (requiresCaptcha && !humanOk) return toast.error("Complete the human check to continue.");
     if (mode === "signin") {
       const remaining = lockoutRemainingMs(email);
       if (remaining > 0) {
