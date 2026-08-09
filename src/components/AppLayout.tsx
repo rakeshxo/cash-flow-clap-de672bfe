@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Coins,
   LogOut,
