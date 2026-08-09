@@ -356,7 +356,7 @@ const SurveysAdmin = () => {
                 <div className="mb-2 flex gap-2">
                   <Input placeholder={`Screener ${qi + 1}`} value={q.q} onChange={(e) => setSQ(qi, { q: e.target.value })} />
                   {form.screener_questions.length > 2 && (
-                    <Button size="icon" variant="ghost" onClick={() => setForm({ ...form, screener_questions: form.screener_questions.filter((_: any, x: number) => x !== qi) })}>
+                    <Button size="icon" variant="ghost" aria-label="Remove screener question" onClick={() => setForm({ ...form, screener_questions: form.screener_questions.filter((_: any, x: number) => x !== qi) })}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
@@ -393,7 +393,7 @@ const SurveysAdmin = () => {
                         />
                         <Input placeholder={`Option ${oi + 1}`} value={opt} onChange={(e) => setSOpt(qi, oi, e.target.value)} />
                         {q.options.length > 2 && (
-                          <Button size="icon" variant="ghost" onClick={() => setSQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi), correct: Math.min(q.correct ?? 0, q.options.length - 2) })}>
+                          <Button size="icon" variant="ghost" aria-label="Remove option" onClick={() => setSQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi), correct: Math.min(q.correct ?? 0, q.options.length - 2) })}>
                             <X className="h-4 w-4" />
                           </Button>
                         )}
@@ -424,7 +424,7 @@ const SurveysAdmin = () => {
                 <div className="mb-2 flex gap-2">
                   <Input placeholder={`Question ${qi + 1}`} value={q.q} onChange={(e) => setQ(qi, { q: e.target.value })} />
                   {form.questions.length > 1 && (
-                    <Button size="icon" variant="ghost" onClick={() => setForm({ ...form, questions: form.questions.filter((_: any, x: number) => x !== qi) })}>
+                    <Button size="icon" variant="ghost" aria-label="Remove question" onClick={() => setForm({ ...form, questions: form.questions.filter((_: any, x: number) => x !== qi) })}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
@@ -434,7 +434,7 @@ const SurveysAdmin = () => {
                     <div key={oi} className="flex gap-2">
                       <Input placeholder={`Option ${oi + 1}`} value={opt} onChange={(e) => setOpt(qi, oi, e.target.value)} />
                       {q.options.length > 2 && (
-                        <Button size="icon" variant="ghost" onClick={() => setQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi) })}>
+                        <Button size="icon" variant="ghost" aria-label="Remove option" onClick={() => setQ(qi, { options: q.options.filter((_: any, x: number) => x !== oi) })}>
                           <X className="h-4 w-4" />
                         </Button>
                       )}
@@ -1205,8 +1205,8 @@ const Row = ({ title, subtitle, onEdit, onDelete }: any) => (
       <p className="truncate font-medium text-foreground">{title}</p>
       <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
     </div>
-    <Button size="icon" variant="ghost" onClick={onEdit}><Pencil className="h-4 w-4" /></Button>
-    <Button size="icon" variant="ghost" onClick={onDelete}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+    <Button size="icon" variant="ghost" aria-label="Edit" onClick={onEdit}><Pencil className="h-4 w-4" /></Button>
+    <Button size="icon" variant="ghost" aria-label="Delete" onClick={onDelete}><Trash2 className="h-4 w-4 text-destructive" /></Button>
   </div>
 );
 

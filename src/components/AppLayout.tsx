@@ -12,7 +12,6 @@ import {
   User as UserIcon,
   Bell,
   Menu,
-  X,
   Shield,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -105,7 +104,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             </Link>
           </div>
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
             {items.map((n) => (
               <NavLink
                 key={n.to}
