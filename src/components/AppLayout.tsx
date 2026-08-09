@@ -193,6 +193,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
 
       {status !== "active" && (
         <div
+          role="status"
           className={`border-b px-4 py-3 text-sm ${
             status === "suspended"
               ? "border-destructive/40 bg-destructive/10 text-destructive"
@@ -200,7 +201,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           }`}
         >
           <div className="container mx-auto flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             <p>
               <strong className="font-semibold">
                 {status === "suspended" ? "Account suspended." : "Account under review."}
@@ -214,7 +215,9 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         </div>
       )}
 
-      <main className="container mx-auto px-4 py-8">{children}</main>
+      <main id="main-content" tabIndex={-1} className="container mx-auto px-4 py-8 focus:outline-none">
+        {children}
+      </main>
 
     </div>
   );
