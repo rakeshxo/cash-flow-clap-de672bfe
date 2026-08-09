@@ -70,6 +70,31 @@ const Auth = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [humanOk, setHumanOk] = useState(false);
+  const [failures, setFailures] = useState(0);
+
+  // Bot friction: always on for sign-up and password resets, and on sign-in after repeated failures.
+  const requiresCaptcha = mode !== "signin" || failures >= 2;
+
+  /** Post-authentication fraud telemetry — fingerprint the device and screen the network. */
+  const runTrustChecks = (context: "signup" | "login") => {
+    registerCurrentDevice()
+      .then((otherAccounts) => {
+        if (otherAccounts > 0) {
+          toast.warning("This device is linked to another account. Multiple accounts per person are not allowed.");
+        }
+      })
+      .catch(() => undefined);
+    runNetworkCheck(context)
+      .then((res) => {
+        if (res?.blocked) {
+          toast.warning("VPN, proxy or Tor detected. Turn it off — payouts are blocked on anonymised connections.");
+        }
+      })
+      .catch(() => undefined);
+  };
+
+
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
