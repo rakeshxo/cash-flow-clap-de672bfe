@@ -22,6 +22,7 @@ import { friendlyError, toastError, withRetry } from "@/lib/errors";
 import { OverviewAdmin } from "@/components/admin/OverviewAdmin";
 import { AuditLogAdmin } from "@/components/admin/AuditLogAdmin";
 import { SecurityEventsAdmin } from "@/components/admin/SecurityEventsAdmin";
+import { KycAdmin } from "@/components/admin/KycAdmin";
 
 import { Shield, Plus, Trash2, Pencil, X, Check, ExternalLink } from "lucide-react";
 import { AGE_RANGES, GENDERS, EMPLOYMENT, INCOME, MARITAL, EDUCATION } from "@/lib/surveyTargeting";
@@ -64,6 +65,7 @@ const Admin = () => {
           <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
           <TabsTrigger value="redemptions">Redemptions</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="kyc">Identity (KYC)</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="audit">Audit log</TabsTrigger>
         </TabsList>
@@ -76,8 +78,10 @@ const Admin = () => {
         <TabsContent value="withdrawals"><WithdrawalsAdmin /></TabsContent>
         <TabsContent value="redemptions"><RedemptionsAdmin /></TabsContent>
         <TabsContent value="users"><UsersAdmin /></TabsContent>
+        <TabsContent value="kyc"><KycAdmin /></TabsContent>
         <TabsContent value="security"><SecurityEventsAdmin /></TabsContent>
         <TabsContent value="audit"><AuditLogAdmin /></TabsContent>
+
       </Tabs>
     </AppLayout>
   );

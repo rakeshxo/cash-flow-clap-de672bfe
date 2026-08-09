@@ -11,6 +11,8 @@ import { z } from "zod";
 
 import logo from "@/assets/logo.png";
 import Seo from "@/components/Seo";
+import { HumanCheck } from "@/components/HumanCheck";
+import { registerCurrentDevice, runNetworkCheck } from "@/lib/deviceTrust";
 
 const REFERRAL_BONUS = 250;
 
@@ -68,6 +70,31 @@ const Auth = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [humanOk, setHumanOk] = useState(false);
+  const [failures, setFailures] = useState(0);
+
+  // Bot friction: always on for sign-up and password resets, and on sign-in after repeated failures.
+  const requiresCaptcha = mode !== "signin" || failures >= 2;
+
+  /** Post-authentication fraud telemetry — fingerprint the device and screen the network. */
+  const runTrustChecks = (context: "signup" | "login") => {
+    registerCurrentDevice()
+      .then((otherAccounts) => {
+        if (otherAccounts > 0) {
+          toast.warning("This device is linked to another account. Multiple accounts per person are not allowed.");
+        }
+      })
+      .catch(() => undefined);
+    runNetworkCheck(context)
+      .then((res) => {
+        if (res?.blocked) {
+          toast.warning("VPN, proxy or Tor detected. Turn it off — payouts are blocked on anonymised connections.");
+        }
+      })
+      .catch(() => undefined);
+  };
+
+
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -109,6 +136,7 @@ const Auth = () => {
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!validate()) return;
+    if (requiresCaptcha && !humanOk) return toast.error("Complete the human check to continue.");
     if (mode === "signin") {
       const remaining = lockoutRemainingMs(email);
       if (remaining > 0) {
@@ -138,18 +166,23 @@ const Auth = () => {
           setSent(true);
           toast.success("Check your email to confirm your account.");
         } else {
+          runTrustChecks("signup");
           toast.success("Account created! You're in.");
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
         clearAttempts(email);
+        setFailures(0);
+        runTrustChecks("login");
         toast.success("Welcome back!");
       }
     } catch (err: any) {
       const msg: string = err?.message ?? "Something went wrong";
       if (mode === "signin" && /invalid login/i.test(msg)) {
         const { count, locked } = registerFailure(email);
+        setFailures((f) => f + 1);
+        setHumanOk(false);
         toast.error(
           locked
             ? "Too many failed attempts. Sign-in is locked for 5 minutes."
@@ -339,10 +372,24 @@ const Auth = () => {
                   </div>
                 )}
 
-                <Button type="submit" className="h-11 w-full text-base shadow-glow" disabled={loading}>
+                {requiresCaptcha && (
+                  <HumanCheck
+                    key={`${mode}-${failures}`}
+                    verified={humanOk}
+                    onVerifiedChange={setHumanOk}
+                    label={mode === "signin" ? "Extra check after failed attempts" : "Quick human check"}
+                  />
+                )}
+
+                <Button
+                  type="submit"
+                  className="h-11 w-full text-base shadow-glow"
+                  disabled={loading || (requiresCaptcha && !humanOk)}
+                >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {mode === "signin" ? "Log in" : mode === "signup" ? "Create account" : "Send reset link"}
                 </Button>
+
               </form>
 
               {mode === "signup" && (

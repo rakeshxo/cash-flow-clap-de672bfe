@@ -21,6 +21,9 @@ import { toastError, withRetry } from "@/lib/errors";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
 import { DataState } from "@/components/DataState";
 import Seo from "@/components/Seo";
+import { HumanCheck } from "@/components/HumanCheck";
+import { KycPanel, KYC_COIN_THRESHOLD } from "@/components/KycPanel";
+import { runNetworkCheck } from "@/lib/deviceTrust";
 
 const MIN_WITHDRAW = 500;
 
@@ -51,7 +54,10 @@ const Withdraw = () => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [humanOk, setHumanOk] = useState(false);
+  const [kycStatus, setKycStatus] = useState("none");
   const { status: accountStatus, reason: accountReason } = useAccountStatus();
+
 
   const refresh = async (uid: string) => {
     setLoadError(null);
@@ -85,12 +91,18 @@ const Withdraw = () => {
 
   const pendingExists = history.some((h) => h.status === "pending");
 
+  const needsKyc = amount > KYC_COIN_THRESHOLD && kycStatus !== "approved";
+
   const openConfirm = () => {
     const destError = validateDestination(method, destination);
     if (destError) return toast.error(destError);
     if (!Number.isInteger(amount) || amount < MIN_WITHDRAW) return toast.error(`Minimum withdrawal is ${MIN_WITHDRAW} coins`);
     if (amount > balance) return toast.error("Not enough coins");
     if (pendingExists) return toast.error("You already have a pending withdrawal.");
+    if (needsKyc) {
+      return toast.error(`Payouts above ${KYC_COIN_THRESHOLD.toLocaleString()} coins need identity verification first.`);
+    }
+    setHumanOk(false);
     setConfirmOpen(true);
   };
 
@@ -101,6 +113,12 @@ const Withdraw = () => {
       // Re-validate the session with the auth server before moving money.
       const { data: fresh, error: authErr } = await supabase.auth.getUser();
       if (authErr || !fresh.user) throw new Error("Your session expired. Please sign in again.");
+
+      // Screen the connection for VPN / proxy / Tor before releasing funds.
+      const net = await runNetworkCheck("withdrawal");
+      if (net?.blocked) {
+        throw new Error("Payouts can't be requested over a VPN, proxy or Tor. Disable it and try again.");
+      }
 
       const { error } = await supabase.rpc("request_withdrawal", {
         _coins: amount,
@@ -122,6 +140,7 @@ const Withdraw = () => {
   const blocked = accountStatus !== "active";
   const canWithdraw = balance >= MIN_WITHDRAW && !blocked && !pendingExists;
   const selectedMethod = METHODS.find((m) => m.id === method)!;
+
 
 
   return (
@@ -226,15 +245,27 @@ const Withdraw = () => {
             <p className="mt-1 text-xs text-muted-foreground">≈ {coinsToCash(amount)}</p>
           </div>
 
-          <Button onClick={openConfirm} disabled={!canWithdraw || submitting} className="w-full" size="lg">
+          {needsKyc && (
+            <p className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              Payouts above {KYC_COIN_THRESHOLD.toLocaleString()} coins require identity verification. Complete it below
+              first.
+            </p>
+          )}
+
+          <Button onClick={openConfirm} disabled={!canWithdraw || submitting || needsKyc} className="w-full" size="lg">
             <Coins className="mr-2 h-4 w-4" />
             {submitting ? "Submitting..." : `Withdraw ${formatCoins(amount)} coins (${coinsToCash(amount)})`}
           </Button>
           <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5" /> Every payout is logged and manually reviewed before it is sent.
+            <ShieldCheck className="h-3.5 w-3.5" /> Every payout is logged, screened for VPN/proxy use and manually
+            reviewed before it is sent.
           </p>
         </div>
       </div>
+
+      <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Identity verification</h2>
+      <KycPanel onStatusChange={setKycStatus} />
+
 
       <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Withdrawal history</h2>
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
@@ -277,9 +308,11 @@ const Withdraw = () => {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <HumanCheck verified={humanOk} onVerifiedChange={setHumanOk} label="Confirm you're human" />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={submit}>Confirm withdrawal</AlertDialogAction>
+            <AlertDialogAction onClick={submit} disabled={!humanOk}>Confirm withdrawal</AlertDialogAction>
+
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

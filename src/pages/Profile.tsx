@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
+import { KycPanel } from "@/components/KycPanel";
+import { DeviceList } from "@/components/DeviceList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,7 +86,14 @@ const Profile = () => {
         </div>
       </div>
 
+      <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Identity verification</h2>
+      <KycPanel />
+
+      <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Your devices</h2>
+      <DeviceList />
+
       <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Recent transactions</h2>
+
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
         {tx.length === 0 ? (
           <p className="p-8 text-center text-muted-foreground">No transactions yet.</p>

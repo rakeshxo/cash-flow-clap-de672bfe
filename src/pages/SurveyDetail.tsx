@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Coins, ArrowLeft, CheckCircle2, ExternalLink, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { HumanCheck } from "@/components/HumanCheck";
 
 
 type Question = { q: string; options: string[] };
@@ -53,6 +54,7 @@ const SurveyDetail = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [trackingUid, setTrackingUid] = useState<string | null>(null);
   const [externalUrl, setExternalUrl] = useState<string | null>(null);
+  const [humanOk, setHumanOk] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -306,10 +308,14 @@ const SurveyDetail = () => {
               })}
             </div>
 
+            <div className="mt-6">
+              <HumanCheck verified={humanOk} onVerifiedChange={setHumanOk} />
+            </div>
+
             <Button
               onClick={isScreener ? submitScreener : submitInApp}
-              disabled={submitting}
-              className="mt-8 h-12 w-full text-base shadow-glow"
+              disabled={submitting || !humanOk}
+              className="mt-4 h-12 w-full text-base shadow-glow"
             >
               {submitting
                 ? "Submitting..."
@@ -317,6 +323,7 @@ const SurveyDetail = () => {
                   ? "Continue"
                   : `Submit & earn ${survey.reward_cents} coins`}
             </Button>
+
           </>
         )}
       </main>

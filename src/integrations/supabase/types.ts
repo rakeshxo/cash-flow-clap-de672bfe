@@ -107,6 +107,90 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_verifications: {
+        Row: {
+          admin_note: string | null
+          country: string
+          date_of_birth: string
+          document_reference: string
+          document_type: string
+          full_name: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          country: string
+          date_of_birth: string
+          document_reference: string
+          document_type: string
+          full_name: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          country?: string
+          date_of_birth?: string
+          document_reference?: string
+          document_type?: string
+          full_name?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      network_signals: {
+        Row: {
+          context: string
+          country: string | null
+          created_at: string
+          id: string
+          ip_hash: string
+          is_hosting: boolean
+          is_proxy: boolean
+          is_tor: boolean
+          is_vpn: boolean
+          user_id: string | null
+        }
+        Insert: {
+          context?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip_hash: string
+          is_hosting?: boolean
+          is_proxy?: boolean
+          is_tor?: boolean
+          is_vpn?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          context?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string
+          is_hosting?: boolean
+          is_proxy?: boolean
+          is_tor?: boolean
+          is_vpn?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
@@ -260,7 +344,9 @@ export type Database = {
           industry: string | null
           interests: string[] | null
           job_title: string | null
+          kyc_status: string
           last_active_date: string | null
+          last_ip_hash: string | null
           last_seen_at: string | null
           marital_status: string | null
           referral_code: string | null
@@ -269,6 +355,8 @@ export type Database = {
           shopping_habits: string[] | null
           suspended_reason: string | null
           user_id: string
+          vpn_checked_at: string | null
+          vpn_flagged: boolean
         }
         Insert: {
           account_status?: string
@@ -289,7 +377,9 @@ export type Database = {
           industry?: string | null
           interests?: string[] | null
           job_title?: string | null
+          kyc_status?: string
           last_active_date?: string | null
+          last_ip_hash?: string | null
           last_seen_at?: string | null
           marital_status?: string | null
           referral_code?: string | null
@@ -298,6 +388,8 @@ export type Database = {
           shopping_habits?: string[] | null
           suspended_reason?: string | null
           user_id: string
+          vpn_checked_at?: string | null
+          vpn_flagged?: boolean
         }
         Update: {
           account_status?: string
@@ -318,7 +410,9 @@ export type Database = {
           industry?: string | null
           interests?: string[] | null
           job_title?: string | null
+          kyc_status?: string
           last_active_date?: string | null
+          last_ip_hash?: string | null
           last_seen_at?: string | null
           marital_status?: string | null
           referral_code?: string | null
@@ -327,6 +421,8 @@ export type Database = {
           shopping_habits?: string[] | null
           suspended_reason?: string | null
           user_id?: string
+          vpn_checked_at?: string | null
+          vpn_flagged?: boolean
         }
         Relationships: []
       }
@@ -665,6 +761,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_devices: {
+        Row: {
+          fingerprint: string
+          first_seen_at: string
+          id: string
+          ip_hash: string | null
+          last_seen_at: string
+          platform: string
+          timezone: string
+          user_agent: string
+          user_id: string
+        }
+        Insert: {
+          fingerprint: string
+          first_seen_at?: string
+          id?: string
+          ip_hash?: string | null
+          last_seen_at?: string
+          platform?: string
+          timezone?: string
+          user_agent?: string
+          user_id: string
+        }
+        Update: {
+          fingerprint?: string
+          first_seen_at?: string
+          id?: string
+          ip_hash?: string | null
+          last_seen_at?: string
+          platform?: string
+          timezone?: string
+          user_agent?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -821,6 +953,10 @@ export type Database = {
         Args: { _event_id: string }
         Returns: undefined
       }
+      admin_review_kyc: {
+        Args: { _approve: boolean; _kyc_id: string; _note?: string }
+        Returns: undefined
+      }
       admin_review_survey_claim: {
         Args: { _approve: boolean; _claim_id: string }
         Returns: undefined
@@ -891,11 +1027,33 @@ export type Database = {
         }
         Returns: undefined
       }
+      internal_record_network_signal: {
+        Args: {
+          _context: string
+          _country: string
+          _ip_hash: string
+          _is_hosting: boolean
+          _is_proxy: boolean
+          _is_tor: boolean
+          _is_vpn: boolean
+          _user_id: string
+        }
+        Returns: undefined
+      }
       internal_require_active: {
         Args: { _user_id: string }
         Returns: undefined
       }
       internal_require_admin: { Args: never; Returns: string }
+      register_device: {
+        Args: {
+          _fingerprint: string
+          _platform?: string
+          _timezone?: string
+          _user_agent?: string
+        }
+        Returns: Json
+      }
       request_redemption: { Args: { _reward_id: string }; Returns: string }
       request_withdrawal: {
         Args: { _coins: number; _destination: string; _method: string }
@@ -904,6 +1062,16 @@ export type Database = {
       start_external_survey: {
         Args: { _answers: Json; _survey_id: string }
         Returns: Json
+      }
+      submit_kyc: {
+        Args: {
+          _country: string
+          _dob: string
+          _doc_reference: string
+          _doc_type: string
+          _full_name: string
+        }
+        Returns: undefined
       }
       user_balance: { Args: { _user_id: string }; Returns: number }
       vote_daily_poll: {

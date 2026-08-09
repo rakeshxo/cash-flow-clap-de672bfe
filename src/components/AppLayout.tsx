@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useIdleLogout } from "@/hooks/useIdleLogout";
+import { useDeviceTrust } from "@/hooks/useDeviceTrust";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
 import { AlertTriangle } from "lucide-react";
 
@@ -38,6 +39,9 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   const [open, setOpen] = useState(false);
 
   useIdleLogout();
+  useDeviceTrust();
+
+
 
 
   const items = isAdmin
