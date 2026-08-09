@@ -91,12 +91,18 @@ const Withdraw = () => {
 
   const pendingExists = history.some((h) => h.status === "pending");
 
+  const needsKyc = amount > KYC_COIN_THRESHOLD && kycStatus !== "approved";
+
   const openConfirm = () => {
     const destError = validateDestination(method, destination);
     if (destError) return toast.error(destError);
     if (!Number.isInteger(amount) || amount < MIN_WITHDRAW) return toast.error(`Minimum withdrawal is ${MIN_WITHDRAW} coins`);
     if (amount > balance) return toast.error("Not enough coins");
     if (pendingExists) return toast.error("You already have a pending withdrawal.");
+    if (needsKyc) {
+      return toast.error(`Payouts above ${KYC_COIN_THRESHOLD.toLocaleString()} coins need identity verification first.`);
+    }
+    setHumanOk(false);
     setConfirmOpen(true);
   };
 
@@ -107,6 +113,12 @@ const Withdraw = () => {
       // Re-validate the session with the auth server before moving money.
       const { data: fresh, error: authErr } = await supabase.auth.getUser();
       if (authErr || !fresh.user) throw new Error("Your session expired. Please sign in again.");
+
+      // Screen the connection for VPN / proxy / Tor before releasing funds.
+      const net = await runNetworkCheck("withdrawal");
+      if (net?.blocked) {
+        throw new Error("Payouts can't be requested over a VPN, proxy or Tor. Disable it and try again.");
+      }
 
       const { error } = await supabase.rpc("request_withdrawal", {
         _coins: amount,
@@ -128,6 +140,7 @@ const Withdraw = () => {
   const blocked = accountStatus !== "active";
   const canWithdraw = balance >= MIN_WITHDRAW && !blocked && !pendingExists;
   const selectedMethod = METHODS.find((m) => m.id === method)!;
+
 
 
   return (
