@@ -16,31 +16,54 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useStaffRoles, STAFF_ROLES } from "@/hooks/useStaffRoles";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataState } from "@/components/DataState";
 import { friendlyError, toastError, withRetry } from "@/lib/errors";
 import { OverviewAdmin } from "@/components/admin/OverviewAdmin";
 import { AuditLogAdmin } from "@/components/admin/AuditLogAdmin";
 import { SecurityEventsAdmin } from "@/components/admin/SecurityEventsAdmin";
 import { KycAdmin } from "@/components/admin/KycAdmin";
+import { PayoutBatchesAdmin } from "@/components/admin/PayoutBatchesAdmin";
+import { TaxReportsAdmin } from "@/components/admin/TaxReportsAdmin";
 
 import { Shield, Plus, Trash2, Pencil, X, Check, ExternalLink } from "lucide-react";
 import { AGE_RANGES, GENDERS, EMPLOYMENT, INCOME, MARITAL, EDUCATION } from "@/lib/surveyTargeting";
 
+
 const Admin = () => {
   const navigate = useNavigate();
-  const { isAdmin, loading } = useIsAdmin();
+  const { isAdmin, isStaff, roles, loading, can } = useStaffRoles();
 
   useEffect(() => {
-    if (!loading && !isAdmin) {
-      toast.error("Admin access only");
+    if (!loading && !isStaff) {
+      toast.error("Staff access only");
       navigate("/dashboard", { replace: true });
     }
-  }, [isAdmin, loading, navigate]);
+  }, [isStaff, loading, navigate]);
 
-  if (loading || !isAdmin) {
+  if (loading || !isStaff) {
     return <AppLayout><div className="py-20 text-center text-muted-foreground">Checking access...</div></AppLayout>;
   }
+
+  const tabs = [
+    { value: "overview", label: "Overview", show: true, node: <OverviewAdmin /> },
+    { value: "surveys", label: "Surveys", show: can("moderator"), node: <SurveysAdmin /> },
+    { value: "claims", label: "Survey claims", show: can("moderator", "reviewer"), node: <SurveyClaimsAdmin /> },
+    { value: "videos", label: "Videos", show: can("moderator"), node: <VideosAdmin /> },
+    { value: "offers", label: "Offers", show: can("moderator"), node: <OffersAdmin /> },
+    { value: "rewards", label: "Rewards", show: can("moderator"), node: <RewardsAdmin /> },
+    { value: "withdrawals", label: "Withdrawals", show: can("finance"), node: <WithdrawalsAdmin /> },
+    { value: "batches", label: "Payout batches", show: can("finance"), node: <PayoutBatchesAdmin /> },
+    { value: "tax", label: "Tax reports", show: can("finance"), node: <TaxReportsAdmin /> },
+    { value: "redemptions", label: "Redemptions", show: can("finance"), node: <RedemptionsAdmin /> },
+    { value: "users", label: "Users", show: can("support", "moderator"), node: <UsersAdmin isAdmin={isAdmin} canAdjust={can("finance")} /> },
+    { value: "kyc", label: "Identity (KYC)", show: can("reviewer"), node: <KycAdmin /> },
+    { value: "security", label: "Security", show: can("moderator"), node: <SecurityEventsAdmin /> },
+    { value: "audit", label: "Audit log", show: isAdmin, node: <AuditLogAdmin /> },
+  ].filter((t) => t.show);
+
+  const roleLabel = isAdmin ? "Admin" : roles.filter((r) => r !== "user").join(", ") || "Staff";
 
   return (
     <AppLayout>
@@ -50,42 +73,24 @@ const Admin = () => {
         </div>
         <div>
           <h1 className="font-display text-3xl font-bold text-foreground">Admin panel</h1>
-          <p className="text-muted-foreground">Manage all platform content.</p>
+          <p className="text-muted-foreground capitalize">Signed in as {roleLabel}.</p>
         </div>
       </div>
 
-      <Tabs defaultValue="overview">
+      <Tabs defaultValue={tabs[0]?.value}>
         <TabsList className="mb-6 flex w-full flex-wrap">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="surveys">Surveys</TabsTrigger>
-          <TabsTrigger value="claims">Survey claims</TabsTrigger>
-          <TabsTrigger value="videos">Videos</TabsTrigger>
-          <TabsTrigger value="offers">Offers</TabsTrigger>
-          <TabsTrigger value="rewards">Rewards</TabsTrigger>
-          <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
-          <TabsTrigger value="redemptions">Redemptions</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="kyc">Identity (KYC)</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="audit">Audit log</TabsTrigger>
+          {tabs.map((t) => (
+            <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>
+          ))}
         </TabsList>
-        <TabsContent value="overview"><OverviewAdmin /></TabsContent>
-        <TabsContent value="surveys"><SurveysAdmin /></TabsContent>
-        <TabsContent value="claims"><SurveyClaimsAdmin /></TabsContent>
-        <TabsContent value="videos"><VideosAdmin /></TabsContent>
-        <TabsContent value="offers"><OffersAdmin /></TabsContent>
-        <TabsContent value="rewards"><RewardsAdmin /></TabsContent>
-        <TabsContent value="withdrawals"><WithdrawalsAdmin /></TabsContent>
-        <TabsContent value="redemptions"><RedemptionsAdmin /></TabsContent>
-        <TabsContent value="users"><UsersAdmin /></TabsContent>
-        <TabsContent value="kyc"><KycAdmin /></TabsContent>
-        <TabsContent value="security"><SecurityEventsAdmin /></TabsContent>
-        <TabsContent value="audit"><AuditLogAdmin /></TabsContent>
-
+        {tabs.map((t) => (
+          <TabsContent key={t.value} value={t.value}>{t.node}</TabsContent>
+        ))}
       </Tabs>
     </AppLayout>
   );
 };
+
 
 /* ---------- Surveys ---------- */
 const emptySurvey = {
@@ -619,12 +624,15 @@ const RedemptionsAdmin = () => {
 /* ---------- Withdrawals ---------- */
 const WithdrawalsAdmin = () => {
   const [items, setItems] = useState<any[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
   const load = async () => {
     const { data } = await supabase
       .from("withdrawals")
       .select("*")
       .order("created_at", { ascending: false });
     setItems(data ?? []);
+    setSelected(new Set());
   };
   useEffect(() => { load(); }, []);
   const review = async (id: string, approve: boolean) => {
@@ -638,10 +646,52 @@ const WithdrawalsAdmin = () => {
     toast.success(approve ? "Marked paid" : "Rejected — coins refunded");
     load();
   };
+  const pending = items.filter((w) => w.status === "pending");
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const bulkReview = async (approveAll: boolean) => {
+    if (selected.size === 0) return;
+    const note = approveAll ? null : window.prompt("Reason for rejection (coins are refunded):") ?? "";
+    if (!confirm(`${approveAll ? "Mark paid" : "Reject"} ${selected.size} withdrawal(s)?`)) return;
+    setBulkBusy(true);
+    const { data, error } = await supabase.rpc("admin_bulk_review_withdrawals", {
+      _ids: Array.from(selected),
+      _approve: approveAll,
+      _note: note,
+    });
+    setBulkBusy(false);
+    if (error) return toast.error(error.message);
+    const res = data as any;
+    toast.success(`${res?.succeeded ?? 0} processed${(res?.failed ?? []).length ? `, ${res.failed.length} failed` : ""}`);
+    load();
+  };
   return (
+    <div className="space-y-4">
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-card">
+      <Button size="sm" variant="outline" onClick={() => setSelected(selected.size > 0 ? new Set() : new Set(pending.map((w) => w.id)))}>
+        {selected.size > 0 ? "Clear selection" : "Select all pending"}
+      </Button>
+      <p className="text-sm text-muted-foreground">
+        {selected.size} selected ·{" "}
+        {items.filter((w) => selected.has(w.id)).reduce((s, w) => s + w.coins_amount, 0)} coins
+      </p>
+      <Button size="sm" disabled={selected.size === 0 || bulkBusy} onClick={() => bulkReview(true)}>
+        <Check className="mr-1 h-3.5 w-3.5" /> Mark selected paid
+      </Button>
+      <Button size="sm" variant="outline" disabled={selected.size === 0 || bulkBusy} onClick={() => bulkReview(false)}>
+        <X className="mr-1 h-3.5 w-3.5" /> Reject selected
+      </Button>
+    </div>
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       {items.length === 0 ? <p className="p-8 text-center text-muted-foreground">No withdrawals yet.</p> : items.map((w) => (
         <div key={w.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4 last:border-0">
+          {w.status === "pending" && (
+            <Checkbox checked={selected.has(w.id)} onCheckedChange={() => toggle(w.id)} aria-label="Select withdrawal" />
+          )}
           <div className="min-w-0 flex-1">
             <p className="font-medium text-foreground capitalize">{w.method} → {w.destination}</p>
             <p className="text-xs text-muted-foreground">User {w.user_id.slice(0, 8)} · {new Date(w.created_at).toLocaleString()} · {w.coins_amount} coins (${(w.cash_value_cents / 100).toFixed(2)})</p>
@@ -660,18 +710,23 @@ const WithdrawalsAdmin = () => {
       ))}
 
     </div>
+    </div>
   );
 };
+
 
 /* ---------- Survey Claims ---------- */
 const SurveyClaimsAdmin = () => {
   const [items, setItems] = useState<any[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
   const load = async () => {
     const { data } = await supabase
       .from("survey_claims")
       .select("*, surveys(title, external_url)")
       .order("submitted_at", { ascending: false });
     setItems(data ?? []);
+    setSelected(new Set());
   };
   useEffect(() => { load(); }, []);
 
@@ -688,13 +743,50 @@ const SurveyClaimsAdmin = () => {
     load();
   };
 
+  const pending = items.filter((c) => c.status === "pending");
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const bulkReview = async (approveAll: boolean) => {
+    if (selected.size === 0) return;
+    if (!confirm(`${approveAll ? "Approve" : "Reject"} ${selected.size} claim(s)?`)) return;
+    setBulkBusy(true);
+    const { data, error } = await supabase.rpc("admin_bulk_review_survey_claims", {
+      _ids: Array.from(selected),
+      _approve: approveAll,
+    });
+    setBulkBusy(false);
+    if (error) return toast.error(error.message);
+    const res = data as any;
+    toast.success(`${res?.succeeded ?? 0} processed${(res?.failed ?? []).length ? `, ${res.failed.length} failed` : ""}`);
+    load();
+  };
+
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-card">
+        <Button size="sm" variant="outline" onClick={() => setSelected(selected.size > 0 ? new Set() : new Set(pending.map((c) => c.id)))}>
+          {selected.size > 0 ? "Clear selection" : "Select all pending"}
+        </Button>
+        <p className="text-sm text-muted-foreground">{selected.size} selected</p>
+        <Button size="sm" disabled={selected.size === 0 || bulkBusy} onClick={() => bulkReview(true)}>
+          <Check className="mr-1 h-3.5 w-3.5" /> Approve selected
+        </Button>
+        <Button size="sm" variant="outline" disabled={selected.size === 0 || bulkBusy} onClick={() => bulkReview(false)}>
+          <X className="mr-1 h-3.5 w-3.5" /> Reject selected
+        </Button>
+      </div>
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       {items.length === 0 ? <p className="p-8 text-center text-muted-foreground">No survey claims yet.</p> : items.map((c) => (
 
         <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4 last:border-0">
+          {c.status === "pending" && (
+            <Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggle(c.id)} aria-label="Select claim" />
+          )}
           <div className="min-w-0 flex-1">
             <p className="font-medium text-foreground">{c.surveys?.title ?? "Survey"}</p>
             <p className="text-xs text-muted-foreground">
@@ -725,9 +817,10 @@ const SurveyClaimsAdmin = () => {
       </div>
     </div>
 
+
   );
 };
-const UsersAdmin = () => {
+const UsersAdmin = ({ isAdmin = false, canAdjust = false }: { isAdmin?: boolean; canAdjust?: boolean }) => {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -738,6 +831,12 @@ const UsersAdmin = () => {
   const [adjustReason, setAdjustReason] = useState("");
   const [statusFor, setStatusFor] = useState<{ user: any; status: string } | null>(null);
   const [statusReason, setStatusReason] = useState("");
+  const [rolesFor, setRolesFor] = useState<any | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkAdjustOpen, setBulkAdjustOpen] = useState(false);
+  const [bulkAmount, setBulkAmount] = useState("");
+  const [bulkReason, setBulkReason] = useState("");
+
 
   const load = async () => {
     setLoading(true);
@@ -753,12 +852,18 @@ const UsersAdmin = () => {
         ]),
       );
       if (pErr) throw pErr;
-      const adminSet = new Set((roles ?? []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id));
+      const roleMap = new Map<string, string[]>();
+      (roles ?? []).forEach((r: any) => roleMap.set(r.user_id, [...(roleMap.get(r.user_id) ?? []), r.role]));
       const balances = new Map<string, number>();
       (txs ?? []).forEach((t: any) => balances.set(t.user_id, (balances.get(t.user_id) ?? 0) + t.amount));
       const merged = (profiles ?? [])
-        .map((p: any) => ({ ...p, balance: balances.get(p.user_id) ?? 0, isAdmin: adminSet.has(p.user_id) }))
+        .map((p: any) => ({
+          ...p,
+          balance: balances.get(p.user_id) ?? 0,
+          roles: (roleMap.get(p.user_id) ?? []).filter((r) => r !== "user"),
+        }))
         .sort((a, b) => b.balance - a.balance);
+
       setRows(merged);
     } catch (err) {
       setLoadError(friendlyError(err, "We couldn't load the user list."));
@@ -768,15 +873,46 @@ const UsersAdmin = () => {
   };
   useEffect(() => { load(); }, []);
 
-  const setRole = async (user_id: string, grant: boolean) => {
-    if (!grant && !confirm("Revoke admin access?")) return;
+  const setRole = async (user_id: string, role: string, grant: boolean) => {
+    if (!grant && !confirm(`Revoke the ${role} role?`)) return;
     setBusy(user_id);
-    const { error } = await supabase.rpc("admin_set_admin_role", { _user_id: user_id, _grant: grant });
+    const { error } = await supabase.rpc("admin_set_user_role", { _user_id: user_id, _role: role, _grant: grant });
     setBusy(null);
-    if (error) return toastError(error, "Couldn't update the admin role.");
-    toast.success(grant ? "Admin granted" : "Admin revoked");
+    if (error) return toastError(error, "Couldn't update the role.");
+    toast.success(grant ? `${role} granted` : `${role} revoked`);
+    setRolesFor((prev: any) =>
+      prev && prev.user_id === user_id
+        ? { ...prev, roles: grant ? [...prev.roles, role] : prev.roles.filter((r: string) => r !== role) }
+        : prev,
+    );
     load();
   };
+
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const submitBulkAdjust = async () => {
+    const amount = Math.trunc(Number(bulkAmount));
+    if (!Number.isFinite(amount) || amount === 0) return toast.error("Enter a non-zero coin amount");
+    if (!bulkReason.trim()) return toast.error("A reason is required");
+    const { data, error } = await supabase.rpc("admin_bulk_adjust_coins", {
+      _user_ids: Array.from(selected),
+      _amount: amount,
+      _reason: bulkReason.trim(),
+    });
+    if (error) return toastError(error, "Couldn't apply the bulk adjustment.");
+    const res = data as any;
+    const failed = (res?.failed ?? []).length;
+    toast.success(`Adjusted ${res?.succeeded ?? 0} users${failed ? `, ${failed} failed` : ""}`);
+    setBulkAdjustOpen(false);
+    setSelected(new Set());
+    load();
+  };
+
 
   const submitStatus = async () => {
     if (!statusFor) return;
@@ -820,6 +956,11 @@ const UsersAdmin = () => {
     r.user_id.toLowerCase().includes(filter.toLowerCase())
   );
 
+  const selectAllVisible = () =>
+    setSelected((prev) => (prev.size > 0 ? new Set() : new Set(filtered.map((r) => r.user_id))));
+
+
+
   const statusChip = (s: string) =>
     s === "suspended"
       ? "bg-destructive text-destructive-foreground"
@@ -829,10 +970,27 @@ const UsersAdmin = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Input placeholder="Search by name or user ID..." value={filter} onChange={(e) => setFilter(e.target.value)} className="max-w-sm" />
         <p className="text-sm text-muted-foreground">{filtered.length} of {rows.length} users</p>
       </div>
+      {canAdjust && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-card">
+          <Button size="sm" variant="outline" onClick={selectAllVisible}>
+            {selected.size > 0 ? "Clear selection" : "Select all shown"}
+          </Button>
+          <p className="text-sm text-muted-foreground">{selected.size} selected</p>
+          <Button
+            size="sm"
+            disabled={selected.size === 0}
+            onClick={() => { setBulkAmount(""); setBulkReason(""); setBulkAdjustOpen(true); }}
+          >
+            Bulk adjust coins
+          </Button>
+        </div>
+      )}
+
+
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
         <DataState
           loading={loading}
@@ -845,15 +1003,23 @@ const UsersAdmin = () => {
           <div className="divide-y divide-border">
             {filtered.map((u) => (
               <div key={u.user_id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                <Checkbox
+                  checked={selected.has(u.user_id)}
+                  onCheckedChange={() => toggleSelect(u.user_id)}
+                  aria-label={`Select ${u.display_name ?? u.user_id}`}
+                />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="truncate font-medium text-foreground">{u.display_name ?? "Unnamed"}</p>
-                    {u.isAdmin && (
-                      <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Admin</span>
-                    )}
+                    {(u.roles ?? []).map((r: string) => (
+                      <span key={r} className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium capitalize text-primary">
+                        {r}
+                      </span>
+                    ))}
                     <span className={`rounded-full px-2 py-0.5 text-xs capitalize ${statusChip(u.account_status)}`}>
                       {u.account_status}
                     </span>
+
                     {u.risk_score > 0 && (
                       <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">risk {u.risk_score}</span>
                     )}
@@ -888,15 +1054,13 @@ const UsersAdmin = () => {
                       Restore
                     </Button>
                   )}
-                  {u.isAdmin ? (
-                    <Button size="sm" variant="outline" disabled={busy === u.user_id} onClick={() => setRole(u.user_id, false)}>
-                      <X className="mr-1 h-3.5 w-3.5" /> Revoke admin
-                    </Button>
-                  ) : (
-                    <Button size="sm" disabled={busy === u.user_id} onClick={() => setRole(u.user_id, true)}>
-                      <Shield className="mr-1 h-3.5 w-3.5" /> Make admin
+                  {isAdmin && (
+                    <Button size="sm" variant="outline" disabled={busy === u.user_id} onClick={() => setRolesFor(u)}>
+                      <Shield className="mr-1 h-3.5 w-3.5" /> Roles
                     </Button>
                   )}
+
+
                 </div>
               </div>
             ))}
@@ -951,7 +1115,67 @@ const UsersAdmin = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!rolesFor} onOpenChange={(o) => !o && setRolesFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Roles for {rolesFor?.display_name ?? "user"}</DialogTitle>
+            <DialogDescription>
+              Each role unlocks only the tools it needs. Admin includes everything.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {STAFF_ROLES.map((r) => {
+              const has = (rolesFor?.roles ?? []).includes(r.value);
+              return (
+                <div key={r.value} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{r.label}</p>
+                    <p className="text-xs text-muted-foreground">{r.blurb}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={has ? "outline" : "default"}
+                    disabled={busy === rolesFor?.user_id}
+                    onClick={() => setRole(rolesFor.user_id, r.value, !has)}
+                  >
+                    {has ? "Revoke" : "Grant"}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRolesFor(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={bulkAdjustOpen} onOpenChange={setBulkAdjustOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bulk coin adjustment</DialogTitle>
+            <DialogDescription>
+              The same adjustment is applied to {selected.size} selected user{selected.size === 1 ? "" : "s"}. Every
+              change is written to the audit log.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Field label="Amount per user (negative to deduct)">
+              <Input type="number" value={bulkAmount} onChange={(e) => setBulkAmount(e.target.value)} placeholder="e.g. 100 or -50" />
+            </Field>
+            <Field label="Reason (shown in the audit log)">
+              <Textarea value={bulkReason} onChange={(e) => setBulkReason(e.target.value)} placeholder="Compensation for survey outage on 12 May" />
+            </Field>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setBulkAdjustOpen(false)}>Cancel</Button>
+            <Button onClick={submitBulkAdjust}>Apply to {selected.size} users</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 };
 

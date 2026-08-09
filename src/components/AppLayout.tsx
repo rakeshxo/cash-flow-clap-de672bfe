@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { coinsToCash, formatCoins, getBalance } from "@/lib/coins";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useStaffRoles } from "@/hooks/useStaffRoles";
 import { useIdleLogout } from "@/hooks/useIdleLogout";
 import { useDeviceTrust } from "@/hooks/useDeviceTrust";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
@@ -32,7 +32,7 @@ const navItems = [
 
 export const AppLayout = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdmin();
+  const { isStaff: isAdmin } = useStaffRoles();
   const { status, reason } = useAccountStatus();
   const [balance, setBalance] = useState(0);
   const [unread, setUnread] = useState(0);

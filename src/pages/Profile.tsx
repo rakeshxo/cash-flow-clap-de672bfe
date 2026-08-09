@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { KycPanel } from "@/components/KycPanel";
 import { DeviceList } from "@/components/DeviceList";
+import { EarningsReport } from "@/components/EarningsReport";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,8 +91,12 @@ const Profile = () => {
       <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Identity verification</h2>
       <KycPanel />
 
+      <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Earnings & tax summary</h2>
+      <EarningsReport />
+
       <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Your devices</h2>
       <DeviceList />
+
 
       <h2 className="mb-4 mt-10 font-display text-xl font-bold text-foreground">Recent transactions</h2>
 

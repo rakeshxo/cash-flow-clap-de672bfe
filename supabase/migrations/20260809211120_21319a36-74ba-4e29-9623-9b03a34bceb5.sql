@@ -1,0 +1,21 @@
+REVOKE ALL ON FUNCTION public.admin_bulk_adjust_coins(uuid[], integer, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.admin_bulk_review_survey_claims(uuid[], boolean) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.admin_bulk_review_withdrawals(uuid[], boolean, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.admin_cancel_payout_batch(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.admin_create_payout_batch(uuid[], text, timestamptz) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.admin_earnings_report(integer, integer) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.admin_run_payout_batch(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.admin_set_user_role(uuid, text, boolean) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.my_earnings_report(integer) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.my_roles() FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.admin_bulk_adjust_coins(uuid[], integer, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_bulk_review_survey_claims(uuid[], boolean) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_bulk_review_withdrawals(uuid[], boolean, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_cancel_payout_batch(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_create_payout_batch(uuid[], text, timestamptz) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_earnings_report(integer, integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_run_payout_batch(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_set_user_role(uuid, text, boolean) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.my_earnings_report(integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.my_roles() TO authenticated;
