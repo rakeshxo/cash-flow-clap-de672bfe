@@ -44,7 +44,7 @@ const Index = () => {
       <header className="container relative z-10 mx-auto flex items-center justify-between py-6">
         <Link to="/" className="group flex items-center gap-2.5">
           <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-primary/40 bg-background shadow-neon transition group-hover:shadow-glow">
-            <img src={logo} alt="Survey Paradox" className="h-8 w-8 object-contain" width={32} height={32} />
+            <img src={logo} alt="" className="h-8 w-8 object-contain" width={32} height={32} />
           </span>
           <span className="font-display text-xl font-bold tracking-wider text-foreground">
             SURVEY <span className="text-gradient-neon">PARADOX</span>
@@ -115,9 +115,9 @@ const Index = () => {
 
       <footer className="relative z-10 border-t border-border/60 py-6 text-center text-xs uppercase tracking-widest text-muted-foreground">
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <Link to="/get-paid-to-watch-videos" className="text-primary hover:underline">Get paid to watch videos</Link>
-          <Link to="/privacy" className="hover:text-primary hover:underline">Privacy</Link>
-          <Link to="/terms" className="hover:text-primary hover:underline">Terms</Link>
+          <Link to="/get-paid-to-watch-videos" className="text-primary underline underline-offset-2">Get paid to watch videos</Link>
+          <Link to="/privacy" className="underline underline-offset-2 hover:text-primary">Privacy</Link>
+          <Link to="/terms" className="underline underline-offset-2 hover:text-primary">Terms</Link>
         </div>
         <div className="mt-2">© {new Date().getFullYear()} Survey Paradox · Built for honest opinions</div>
       </footer>

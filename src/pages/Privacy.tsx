@@ -115,7 +115,7 @@ const Privacy = () => {
           <LegalSection title="Contact">
             <p>
               Questions about this policy or your data? Reach us at{" "}
-              <a href="mailto:pie99110@gmail.com" className="text-primary hover:underline">
+              <a href="mailto:pie99110@gmail.com" className="text-primary underline underline-offset-2">
                 pie99110@gmail.com
               </a>
               .
@@ -124,7 +124,7 @@ const Privacy = () => {
         </div>
 
         <div className="mt-12 border-t border-border/60 pt-6 text-xs uppercase tracking-widest text-muted-foreground">
-          <Link to="/terms" className="text-primary hover:underline">
+          <Link to="/terms" className="text-primary underline underline-offset-2">
             Terms of Service
           </Link>
         </div>
