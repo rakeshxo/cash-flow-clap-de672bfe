@@ -306,10 +306,14 @@ const SurveyDetail = () => {
               })}
             </div>
 
+            <div className="mt-6">
+              <HumanCheck verified={humanOk} onVerifiedChange={setHumanOk} />
+            </div>
+
             <Button
               onClick={isScreener ? submitScreener : submitInApp}
-              disabled={submitting}
-              className="mt-8 h-12 w-full text-base shadow-glow"
+              disabled={submitting || !humanOk}
+              className="mt-4 h-12 w-full text-base shadow-glow"
             >
               {submitting
                 ? "Submitting..."
@@ -317,6 +321,7 @@ const SurveyDetail = () => {
                   ? "Continue"
                   : `Submit & earn ${survey.reward_cents} coins`}
             </Button>
+
           </>
         )}
       </main>
