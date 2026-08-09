@@ -111,24 +111,25 @@ export const KycPanel = ({ onStatusChange }: { onStatusChange?: (s: string) => v
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
-          <Label className="mb-2 block">Full legal name</Label>
-          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={120} placeholder="As printed on your ID" />
+          <Label htmlFor="kyc-name" className="mb-2 block">Full legal name</Label>
+          <Input id="kyc-name" value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={120} placeholder="As printed on your ID" />
         </div>
         <div>
-          <Label className="mb-2 block">Date of birth</Label>
-          <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+          <Label htmlFor="kyc-dob" className="mb-2 block">Date of birth</Label>
+          <Input id="kyc-dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
         </div>
         <div>
-          <Label className="mb-2 block">Country of residence</Label>
-          <Input value={country} onChange={(e) => setCountry(e.target.value)} maxLength={60} placeholder="e.g. India" />
+          <Label htmlFor="kyc-country" className="mb-2 block">Country of residence</Label>
+          <Input id="kyc-country" value={country} onChange={(e) => setCountry(e.target.value)} maxLength={60} placeholder="e.g. India" />
         </div>
-        <div>
-          <Label className="mb-2 block">Document type</Label>
+        <div role="group" aria-labelledby="kyc-doctype-label">
+          <Label id="kyc-doctype-label" className="mb-2 block">Document type</Label>
           <div className="flex flex-wrap gap-2">
             {DOC_TYPES.map((d) => (
               <button
                 key={d.id}
                 type="button"
+                aria-pressed={docType === d.id}
                 onClick={() => setDocType(d.id)}
                 className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
                   docType === d.id ? "bg-gradient-hero text-primary-foreground shadow-glow" : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -140,10 +141,11 @@ export const KycPanel = ({ onStatusChange }: { onStatusChange?: (s: string) => v
           </div>
         </div>
         <div className="sm:col-span-2">
-          <Label className="mb-2 block">Document number</Label>
-          <Input value={docRef} onChange={(e) => setDocRef(e.target.value)} maxLength={60} placeholder="Document / ID number" />
+          <Label htmlFor="kyc-docref" className="mb-2 block">Document number</Label>
+          <Input id="kyc-docref" value={docRef} onChange={(e) => setDocRef(e.target.value)} maxLength={60} placeholder="Document / ID number" />
         </div>
       </div>
+
 
       <Button className="mt-5 w-full" onClick={submit} disabled={submitting}>
         {submitting ? "Submitting..." : "Submit for verification"}
