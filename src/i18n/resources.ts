@@ -147,7 +147,7 @@ export const resources: Record<string, { translation: Translation }> = {
   },
   ru: {
     translation: t({
-      nav: { home: "Главная", earn: "Заработок", withdraw: "Вывод", profile: "Профиль", admin: "Админpanel".replace("panel", "-панель"), menu: "Меню", openMenu: "Открыть меню", notifications: "Уведомления", signOut: "Выйти", balance: "Баланс", skip: "Перейти к основному содержимому" },
+      nav: { home: "Главная", earn: "Заработок", withdraw: "Вывод", profile: "Профиль", admin: "Админ-панель", menu: "Меню", openMenu: "Открыть меню", notifications: "Уведомления", signOut: "Выйти", balance: "Баланс", skip: "Перейти к основному содержимому" },
       common: { loading: "Загрузка...", language: "Язык", save: "Сохранить", cancel: "Отмена", continueLabel: "Продолжить", back: "Назад" },
       auth: { signIn: "Войти", signUp: "Регистрация", email: "Эл. почта", password: "Пароль", forgot: "Забыли пароль?", google: "Продолжить с Google", welcome: "С возвращением", create: "Создайте аккаунт" },
       earn: { title: "Доступные опросы", subtitle: "Подобраны по вашему профилю", start: "Начать опрос", reward: "Награда", minutes: "мин" },
