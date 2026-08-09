@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Coins, ArrowLeft, CheckCircle2, ExternalLink, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { HumanCheck } from "@/components/HumanCheck";
 
 
 type Question = { q: string; options: string[] };
@@ -53,6 +54,7 @@ const SurveyDetail = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [trackingUid, setTrackingUid] = useState<string | null>(null);
   const [externalUrl, setExternalUrl] = useState<string | null>(null);
+  const [humanOk, setHumanOk] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
