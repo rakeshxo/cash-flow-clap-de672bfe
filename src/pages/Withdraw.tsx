@@ -200,15 +200,16 @@ const Withdraw = () => {
       <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
         <h2 className="mb-4 font-display text-xl font-bold text-foreground">Request withdrawal</h2>
         <div className="space-y-4">
-          <div>
-            <Label className="mb-2 block">Payout method</Label>
+          <div role="group" aria-labelledby="payout-method-label">
+            <Label id="payout-method-label" className="mb-2 block">Payout method</Label>
             <div className="flex flex-wrap gap-2">
               {METHODS.map((m) => (
                 <button
                   key={m.id}
                   type="button"
+                  aria-pressed={method === m.id}
                   onClick={() => setMethod(m.id)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`min-h-11 rounded-full px-4 py-2 text-sm font-medium transition ${
                     method === m.id
                       ? "bg-gradient-hero text-primary-foreground shadow-glow"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -221,29 +222,34 @@ const Withdraw = () => {
           </div>
 
           <div>
-            <Label className="mb-2 block">{selectedMethod.label} destination</Label>
+            <Label htmlFor="payout-destination" className="mb-2 block">{selectedMethod.label} destination</Label>
             <Input
+              id="payout-destination"
+              aria-describedby="payout-destination-help"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
               placeholder={selectedMethod.placeholder}
               maxLength={200}
             />
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p id="payout-destination-help" className="mt-1 text-xs text-muted-foreground">
               A payout destination can only be linked to one account.
             </p>
           </div>
 
           <div>
-            <Label className="mb-2 block">Amount (coins) — min {MIN_WITHDRAW}</Label>
+            <Label htmlFor="payout-amount" className="mb-2 block">Amount (coins) — min {MIN_WITHDRAW}</Label>
             <Input
+              id="payout-amount"
+              aria-describedby="payout-amount-help"
               type="number"
               min={MIN_WITHDRAW}
               max={balance}
               value={amount}
               onChange={(e) => setAmount(Math.floor(Number(e.target.value) || 0))}
             />
-            <p className="mt-1 text-xs text-muted-foreground">≈ {coinsToCash(amount)}</p>
+            <p id="payout-amount-help" className="mt-1 text-xs text-muted-foreground">≈ {coinsToCash(amount)}</p>
           </div>
+
 
           {needsKyc && (
             <p className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">

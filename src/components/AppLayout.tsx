@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Coins,
   LogOut,
@@ -11,7 +12,6 @@ import {
   User as UserIcon,
   Bell,
   Menu,
-  X,
   Shield,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -77,7 +77,13 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-soft font-sans">
+    <div className="min-h-dvh bg-gradient-soft font-sans">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-card focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        Skip to main content
+      </a>
       <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur">
         <div className="container mx-auto flex items-center justify-between gap-3 py-3">
           <div className="flex items-center gap-3">
@@ -85,18 +91,20 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
               className="rounded-lg p-2 hover:bg-secondary md:hidden"
               onClick={() => setOpen(true)}
               aria-label="Open menu"
+              aria-expanded={open}
+              aria-controls="mobile-nav"
             >
               <Menu className="h-5 w-5" />
             </button>
             <Link to="/dashboard" className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-hero shadow-glow">
-                <Coins className="h-5 w-5 text-primary-foreground" />
+                <Coins className="h-5 w-5 text-primary-foreground" aria-hidden />
               </div>
               <span className="font-display text-xl font-bold text-foreground">PollPay</span>
             </Link>
           </div>
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
             {items.map((n) => (
               <NavLink
                 key={n.to}
@@ -119,20 +127,23 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             <Link
               to="/activity"
               className="relative rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
-              aria-label="Activity"
+              aria-label={unread > 0 ? `Activity, ${unread} unread` : "Activity"}
             >
-              <Bell className="h-5 w-5" />
+              <Bell className="h-5 w-5" aria-hidden />
               {unread > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+                <span
+                  aria-hidden
+                  className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground"
+                >
                   {unread}
                 </span>
               )}
             </Link>
             <div className="hidden items-center gap-2 rounded-xl bg-gradient-hero px-3 py-1.5 text-primary-foreground shadow-glow sm:flex">
-              <Coins className="h-4 w-4" />
+              <Coins className="h-4 w-4" aria-hidden />
               <div className="leading-tight">
-                <p className="text-[10px] opacity-90">Balance</p>
-                <p className="font-display text-sm font-bold">
+                <p className="text-[10px] opacity-90" id="balance-label">Balance</p>
+                <p className="font-display text-sm font-bold" aria-labelledby="balance-label" aria-live="polite">
                   {formatCoins(balance)} <span className="text-[10px] opacity-90">({coinsToCash(balance)})</span>
                 </p>
               </div>
@@ -144,51 +155,44 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         </div>
       </header>
 
-      {open && (
-        <div className="fixed inset-0 z-50 md:hidden" onClick={() => setOpen(false)}>
-          <div className="absolute inset-0 bg-foreground/40" />
-          <aside
-            className="absolute left-0 top-0 h-full w-72 bg-card p-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <span className="font-display text-lg font-bold">Menu</span>
-              <button onClick={() => setOpen(false)} aria-label="Close">
-                <X className="h-5 w-5" />
-              </button>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="left" id="mobile-nav" className="w-72 bg-card p-4 md:hidden">
+          <SheetHeader className="mb-4 text-left">
+            <SheetTitle className="font-display text-lg font-bold">Menu</SheetTitle>
+          </SheetHeader>
+          <div className="mb-4 flex items-center gap-2 rounded-xl bg-gradient-hero p-3 text-primary-foreground">
+            <Coins className="h-5 w-5" aria-hidden />
+            <div>
+              <p className="text-xs opacity-90" id="balance-label-mobile">Balance</p>
+              <p className="font-display text-lg font-bold" aria-labelledby="balance-label-mobile">
+                {formatCoins(balance)} ({coinsToCash(balance)})
+              </p>
             </div>
-            <div className="mb-4 flex items-center gap-2 rounded-xl bg-gradient-hero p-3 text-primary-foreground">
-              <Coins className="h-5 w-5" />
-              <div>
-                <p className="text-xs opacity-90">Balance</p>
-                <p className="font-display text-lg font-bold">
-                  {formatCoins(balance)} ({coinsToCash(balance)})
-                </p>
-              </div>
-            </div>
-            <nav className="flex flex-col gap-1">
-              {items.map((n) => (
-                <NavLink
-                  key={n.to}
-                  to={n.to}
-                  onClick={() => setOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium ${
-                      isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
-                    }`
-                  }
-                >
-                  <n.icon className="h-4 w-4" />
-                  {n.label}
-                </NavLink>
-              ))}
-            </nav>
-          </aside>
-        </div>
-      )}
+          </div>
+          <nav className="flex flex-col gap-1" aria-label="Main">
+            {items.map((n) => (
+              <NavLink
+                key={n.to}
+                to={n.to}
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium ${
+                    isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
+                  }`
+                }
+              >
+                <n.icon className="h-4 w-4" aria-hidden />
+                {n.label}
+              </NavLink>
+            ))}
+          </nav>
+        </SheetContent>
+      </Sheet>
+
 
       {status !== "active" && (
         <div
+          role="status"
           className={`border-b px-4 py-3 text-sm ${
             status === "suspended"
               ? "border-destructive/40 bg-destructive/10 text-destructive"
@@ -196,7 +200,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           }`}
         >
           <div className="container mx-auto flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             <p>
               <strong className="font-semibold">
                 {status === "suspended" ? "Account suspended." : "Account under review."}
@@ -210,7 +214,9 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         </div>
       )}
 
-      <main className="container mx-auto px-4 py-8">{children}</main>
+      <main id="main-content" tabIndex={-1} className="container mx-auto px-4 py-8 focus:outline-none">
+        {children}
+      </main>
 
     </div>
   );

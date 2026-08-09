@@ -12,7 +12,7 @@ const steps = [
 
 const GetPaidToWatchVideos = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Seo
         title="Get Paid to Watch Videos — Survey Paradox"
         description="Get paid to watch videos online. Earn coins for every clip you finish on Survey Paradox and withdraw real cash to PayPal, bank, or crypto from 500 coins."
@@ -42,7 +42,7 @@ const GetPaidToWatchVideos = () => {
 
       <header className="container mx-auto flex items-center justify-between py-6">
         <Link to="/" className="flex items-center gap-2.5">
-          <img src={logo} alt="Survey Paradox" className="h-8 w-8 object-contain" width={32} height={32} />
+          <img src={logo} alt="" className="h-8 w-8 object-contain" width={32} height={32} />
           <span className="font-display text-xl font-bold tracking-wider text-foreground">
             SURVEY <span className="text-gradient-neon">PARADOX</span>
           </span>

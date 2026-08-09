@@ -12,7 +12,7 @@ const Terms = () => {
   const updated = "August 2026";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Seo
         title="Terms of Service | Survey Paradox"
         description="The rules for using Survey Paradox: accounts, earning coins, withdrawals, fair use, and account suspension."
@@ -100,7 +100,7 @@ const Terms = () => {
           <LegalSection title="Contact">
             <p>
               Questions about these terms? Reach us at{" "}
-              <a href="mailto:pie99110@gmail.com" className="text-primary hover:underline">
+              <a href="mailto:pie99110@gmail.com" className="text-primary underline underline-offset-2">
                 contact@surveyparadox.com
               </a>
               .
@@ -109,7 +109,7 @@ const Terms = () => {
         </div>
 
         <div className="mt-12 border-t border-border/60 pt-6 text-xs uppercase tracking-widest text-muted-foreground">
-          <Link to="/privacy" className="text-primary hover:underline">
+          <Link to="/privacy" className="text-primary underline underline-offset-2">
             Privacy Policy
           </Link>
         </div>

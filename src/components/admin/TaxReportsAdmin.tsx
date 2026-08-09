@@ -77,8 +77,9 @@ export const TaxReportsAdmin = () => {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-border bg-card p-4 shadow-card">
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wide text-muted-foreground">Tax year</label>
+          <label htmlFor="tax-year" className="mb-1 block text-xs uppercase tracking-wide text-muted-foreground">Tax year</label>
           <Input
+            id="tax-year"
             type="number"
             className="w-32"
             value={year}
@@ -86,10 +87,11 @@ export const TaxReportsAdmin = () => {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wide text-muted-foreground">
+          <label htmlFor="tax-threshold" className="mb-1 block text-xs uppercase tracking-wide text-muted-foreground">
             Reporting threshold (USD paid out)
           </label>
           <Input
+            id="tax-threshold"
             type="number"
             className="w-40"
             value={threshold}

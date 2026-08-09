@@ -44,12 +44,12 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center p-4 font-sans">
+    <div className="relative flex min-h-dvh items-center justify-center p-4 font-sans">
       <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
-      <div className="relative w-full max-w-md animate-fade-in">
+      <main className="relative w-full max-w-md animate-fade-in">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
           <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-primary/40 bg-background shadow-neon">
-            <img src={logo} alt="Survey Paradox" className="h-8 w-8 object-contain" />
+            <img src={logo} alt="" className="h-8 w-8 object-contain" />
           </span>
           <span className="font-display text-xl font-bold tracking-wider text-foreground">
             SURVEY <span className="text-gradient-neon">PARADOX</span>
@@ -107,7 +107,7 @@ const ResetPassword = () => {
             Back to login
           </Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

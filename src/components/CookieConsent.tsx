@@ -54,11 +54,11 @@ export const CookieConsent = () => {
             We use essential cookies to keep you signed in and to keep the platform secure. With your
             permission we also use optional cookies to understand how the site is used so we can improve it.
             Read our{" "}
-            <Link to="/privacy" className="text-primary hover:underline">
+            <Link to="/privacy" className="text-primary underline underline-offset-2">
               Privacy Policy
             </Link>{" "}
             and{" "}
-            <Link to="/terms" className="text-primary hover:underline">
+            <Link to="/terms" className="text-primary underline underline-offset-2">
               Terms
             </Link>
             .

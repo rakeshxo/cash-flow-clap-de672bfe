@@ -231,13 +231,13 @@ const Auth = () => {
   return (
     <>
     <Seo title="Log In or Sign Up — Survey Paradox" description="Create a free Survey Paradox account or log in to start earning coins from paid surveys and videos." path="/auth" />
-    <div className="relative flex min-h-screen items-center justify-center p-4 font-sans">
+    <div className="relative flex min-h-dvh items-center justify-center p-4 font-sans">
       <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute bottom-0 right-0 h-[24rem] w-[24rem] rounded-full bg-accent/15 blur-3xl" />
-      <div className="relative w-full max-w-md animate-fade-in">
+      <main className="relative w-full max-w-md animate-fade-in">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
           <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-primary/40 bg-background shadow-neon">
-            <img src={logo} alt="Survey Paradox" className="h-8 w-8 object-contain" />
+            <img src={logo} alt="" className="h-8 w-8 object-contain" />
           </span>
           <span className="font-display text-xl font-bold tracking-wider text-foreground">
             SURVEY <span className="text-gradient-neon">PARADOX</span>
@@ -414,7 +414,7 @@ const Auth = () => {
             </>
           )}
         </div>
-      </div>
+      </main>
     </div>
     </>
   );
