@@ -54,7 +54,10 @@ const Withdraw = () => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [humanOk, setHumanOk] = useState(false);
+  const [kycStatus, setKycStatus] = useState("none");
   const { status: accountStatus, reason: accountReason } = useAccountStatus();
+
 
   const refresh = async (uid: string) => {
     setLoadError(null);
