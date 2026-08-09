@@ -17,7 +17,10 @@ import Onboarding from "./pages/Onboarding.tsx";
 
 import ResetPassword from "./pages/ResetPassword.tsx";
 import GetPaidToWatchVideos from "./pages/GetPaidToWatchVideos.tsx";
+import Privacy from "./pages/Privacy.tsx";
+import Terms from "./pages/Terms.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import CookieConsent from "./components/CookieConsent.tsx";
 
 const queryClient = new QueryClient();
 
@@ -42,9 +45,12 @@ const App = () => (
           <Route path="/survey/:id" element={<SurveyDetail />} />
           
           <Route path="/get-paid-to-watch-videos" element={<GetPaidToWatchVideos />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <CookieConsent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -114,7 +114,11 @@ const Index = () => {
       </main>
 
       <footer className="relative z-10 border-t border-border/60 py-6 text-center text-xs uppercase tracking-widest text-muted-foreground">
-        <Link to="/get-paid-to-watch-videos" className="text-primary hover:underline">Get paid to watch videos</Link>
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <Link to="/get-paid-to-watch-videos" className="text-primary hover:underline">Get paid to watch videos</Link>
+          <Link to="/privacy" className="hover:text-primary hover:underline">Privacy</Link>
+          <Link to="/terms" className="hover:text-primary hover:underline">Terms</Link>
+        </div>
         <div className="mt-2">© {new Date().getFullYear()} Survey Paradox · Built for honest opinions</div>
       </footer>
     </div>
