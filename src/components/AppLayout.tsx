@@ -127,20 +127,23 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             <Link
               to="/activity"
               className="relative rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
-              aria-label="Activity"
+              aria-label={unread > 0 ? `Activity, ${unread} unread` : "Activity"}
             >
-              <Bell className="h-5 w-5" />
+              <Bell className="h-5 w-5" aria-hidden />
               {unread > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+                <span
+                  aria-hidden
+                  className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground"
+                >
                   {unread}
                 </span>
               )}
             </Link>
             <div className="hidden items-center gap-2 rounded-xl bg-gradient-hero px-3 py-1.5 text-primary-foreground shadow-glow sm:flex">
-              <Coins className="h-4 w-4" />
+              <Coins className="h-4 w-4" aria-hidden />
               <div className="leading-tight">
-                <p className="text-[10px] opacity-90">Balance</p>
-                <p className="font-display text-sm font-bold">
+                <p className="text-[10px] opacity-90" id="balance-label">Balance</p>
+                <p className="font-display text-sm font-bold" aria-labelledby="balance-label" aria-live="polite">
                   {formatCoins(balance)} <span className="text-[10px] opacity-90">({coinsToCash(balance)})</span>
                 </p>
               </div>
