@@ -308,9 +308,11 @@ const Withdraw = () => {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <HumanCheck verified={humanOk} onVerifiedChange={setHumanOk} label="Confirm you're human" />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={submit}>Confirm withdrawal</AlertDialogAction>
+            <AlertDialogAction onClick={submit} disabled={!humanOk}>Confirm withdrawal</AlertDialogAction>
+
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
