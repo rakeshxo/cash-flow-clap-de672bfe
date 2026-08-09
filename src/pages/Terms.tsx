@@ -30,8 +30,8 @@ const Terms = () => {
         <div className="mt-10 space-y-10">
           <LegalSection title="Accepting these terms">
             <p>
-              By creating an account or using Survey Paradox you agree to these terms. If you do not agree,
-              please do not use the platform.
+              By creating an account or using Survey Paradox you agree to these terms. If you do not agree, please do
+              not use the platform.
             </p>
           </LegalSection>
 
@@ -45,10 +45,10 @@ const Terms = () => {
 
           <LegalSection title="Earning coins">
             <p>
-              Coins are awarded for completed surveys, videos, offers, and other tasks shown in the app.
-              Rewards for third-party surveys are credited after the submission is verified. Screener
-              questions determine eligibility; if you do not qualify for a survey, no reward is due. Coins
-              have no cash value until a withdrawal is approved and paid.
+              Coins are awarded for completed surveys, videos, offers, and other tasks shown in the app. Rewards for
+              third-party surveys are credited after the submission is verified. Screener questions determine
+              eligibility; if you do not qualify for a survey, no reward is due. Coins have no cash value until a
+              withdrawal is approved and paid.
             </p>
           </LegalSection>
 
@@ -58,8 +58,8 @@ const Terms = () => {
               <li>Only one withdrawal request can be pending at a time.</li>
               <li>Requests are reviewed before payout, and coins are returned if a request is rejected.</li>
               <li>
-                A payout destination may only be linked to a single account. Shared destinations are flagged
-                and blocked.
+                A payout destination may only be linked to a single account. Shared destinations are flagged and
+                blocked.
               </li>
               <li>Withdrawals are paused while an account is under review.</li>
             </ul>
@@ -77,23 +77,23 @@ const Terms = () => {
 
           <LegalSection title="Suspension and forfeiture">
             <p>
-              We may flag, suspend, or close accounts that breach these terms or show signs of fraud, and we
-              may withhold or reverse coins earned through such activity. Where possible we will tell you why
-              an action was taken.
+              We may flag, suspend, or close accounts that breach these terms or show signs of fraud, and we may
+              withhold or reverse coins earned through such activity. Where possible we will tell you why an action was
+              taken.
             </p>
           </LegalSection>
 
           <LegalSection title="Third-party surveys">
             <p>
-              Some surveys are hosted by third parties. Their content, availability, and terms are outside our
-              control, and completing them is subject to their rules.
+              Some surveys are hosted by third parties. Their content, availability, and terms are outside our control,
+              and completing them is subject to their rules.
             </p>
           </LegalSection>
 
           <LegalSection title="Changes to the service">
             <p>
-              We may add, change, or remove features, reward amounts, and earning opportunities. We may update
-              these terms; continued use after an update means you accept the revised terms.
+              We may add, change, or remove features, reward amounts, and earning opportunities. We may update these
+              terms; continued use after an update means you accept the revised terms.
             </p>
           </LegalSection>
 
@@ -101,7 +101,7 @@ const Terms = () => {
             <p>
               Questions about these terms? Reach us at{" "}
               <a href="mailto:pie99110@gmail.com" className="text-primary hover:underline">
-                pie99110@gmail.com
+                contact@surveyparadox.com
               </a>
               .
             </p>
