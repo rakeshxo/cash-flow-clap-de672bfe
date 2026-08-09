@@ -133,16 +133,16 @@ const Onboarding = () => {
             <div className="space-y-5">
               <h2 className="font-display text-2xl font-bold text-foreground">About you</h2>
               <div className="space-y-2">
-                <Label>Age range</Label>
+                <Label htmlFor="age-range">Age range</Label>
                 <Select value={ageRange} onValueChange={setAgeRange}>
-                  <SelectTrigger><SelectValue placeholder="Select age range" /></SelectTrigger>
+                  <SelectTrigger id="age-range"><SelectValue placeholder="Select age range" /></SelectTrigger>
                   <SelectContent>{AGE_RANGES.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Gender</Label>
+                <Label htmlFor="gender">Gender</Label>
                 <Select value={gender} onValueChange={setGender}>
-                  <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                  <SelectTrigger id="gender"><SelectValue placeholder="Select gender" /></SelectTrigger>
                   <SelectContent>{GENDERS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -157,9 +157,9 @@ const Onboarding = () => {
             <div className="space-y-5">
               <h2 className="font-display text-2xl font-bold text-foreground">Work & income</h2>
               <div className="space-y-2">
-                <Label>Employment status</Label>
+                <Label htmlFor="employment">Employment status</Label>
                 <Select value={employmentStatus} onValueChange={setEmploymentStatus}>
-                  <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                  <SelectTrigger id="employment"><SelectValue placeholder="Select status" /></SelectTrigger>
                   <SelectContent>{EMPLOYMENT.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -168,16 +168,16 @@ const Onboarding = () => {
                 <Input id="job" maxLength={80} value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. Software Engineer" />
               </div>
               <div className="space-y-2">
-                <Label>Industry (optional)</Label>
+                <Label htmlFor="industry">Industry (optional)</Label>
                 <Select value={industry} onValueChange={setIndustry}>
-                  <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
+                  <SelectTrigger id="industry"><SelectValue placeholder="Select industry" /></SelectTrigger>
                   <SelectContent>{INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Household income (optional)</Label>
+                <Label htmlFor="income">Household income (optional)</Label>
                 <Select value={incomeRange} onValueChange={setIncomeRange}>
-                  <SelectTrigger><SelectValue placeholder="Select income" /></SelectTrigger>
+                  <SelectTrigger id="income"><SelectValue placeholder="Select income" /></SelectTrigger>
                   <SelectContent>{INCOME.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -188,18 +188,18 @@ const Onboarding = () => {
             <div className="space-y-5">
               <h2 className="font-display text-2xl font-bold text-foreground">Your interests</h2>
               <div>
-                <Label className="mb-3 block">Pick what you're into</Label>
+                <Label id="interests-label" className="mb-3 block">Pick what you're into</Label>
                 <div className="flex flex-wrap gap-2">
                   {INTERESTS.map((i) => (
-                    <button key={i} type="button" onClick={() => toggle(interests, setInterests, i)} className={`rounded-full border px-3 py-1.5 text-sm transition ${interests.includes(i) ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-secondary-foreground hover:border-primary/50"}`}>{i}</button>
+                    <button key={i} type="button" aria-pressed={interests.includes(i)} onClick={() => toggle(interests, setInterests, i)} className={`rounded-full border px-3 py-1.5 text-sm transition ${interests.includes(i) ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-secondary-foreground hover:border-primary/50"}`}>{i}</button>
                   ))}
                 </div>
               </div>
               <div>
-                <Label className="mb-3 block">Shopping habits (optional)</Label>
+                <Label id="shopping-label" className="mb-3 block">Shopping habits (optional)</Label>
                 <div className="flex flex-wrap gap-2">
                   {SHOPPING.map((s) => (
-                    <button key={s} type="button" onClick={() => toggle(shoppingHabits, setShoppingHabits, s)} className={`rounded-full border px-3 py-1.5 text-sm transition ${shoppingHabits.includes(s) ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-secondary-foreground hover:border-primary/50"}`}>{s}</button>
+                    <button key={s} type="button" aria-pressed={shoppingHabits.includes(s)} onClick={() => toggle(shoppingHabits, setShoppingHabits, s)} className={`rounded-full border px-3 py-1.5 text-sm transition ${shoppingHabits.includes(s) ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-secondary-foreground hover:border-primary/50"}`}>{s}</button>
                   ))}
                 </div>
               </div>
@@ -210,24 +210,24 @@ const Onboarding = () => {
             <div className="space-y-5">
               <h2 className="font-display text-2xl font-bold text-foreground">Household</h2>
               <div className="space-y-2">
-                <Label>Marital status</Label>
+                <Label htmlFor="marital">Marital status</Label>
                 <Select value={maritalStatus} onValueChange={setMaritalStatus}>
-                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectTrigger id="marital"><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>{MARITAL.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Education</Label>
+                <Label htmlFor="education">Education</Label>
                 <Select value={education} onValueChange={setEducation}>
-                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectTrigger id="education"><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>{EDUCATION.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Do you have children?</Label>
+                <Label id="kids-label">Do you have children?</Label>
                 <div className="flex gap-3">
                   {[{ v: "yes", l: "Yes" }, { v: "no", l: "No" }].map((o) => (
-                    <button key={o.v} type="button" onClick={() => setHasKids(o.v)} className={`flex-1 rounded-xl border px-4 py-3 text-sm font-medium transition ${hasKids === o.v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-secondary-foreground hover:border-primary/50"}`}>{o.l}</button>
+                    <button key={o.v} type="button" aria-pressed={hasKids === o.v} onClick={() => setHasKids(o.v)} className={`flex-1 rounded-xl border px-4 py-3 text-sm font-medium transition ${hasKids === o.v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-secondary-foreground hover:border-primary/50"}`}>{o.l}</button>
                   ))}
                 </div>
               </div>

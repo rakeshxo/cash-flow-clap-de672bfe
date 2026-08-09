@@ -84,12 +84,12 @@ export const AuditLogAdmin = () => {
             onChange={(e) => setFilter(e.target.value)}
           />
           <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-muted-foreground">From</label>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <label htmlFor="audit-from" className="mb-1 block text-xs uppercase tracking-wide text-muted-foreground">From</label>
+            <Input id="audit-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
           <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-muted-foreground">To</label>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            <label htmlFor="audit-to" className="mb-1 block text-xs uppercase tracking-wide text-muted-foreground">To</label>
+            <Input id="audit-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
         </div>
         <div className="flex items-center gap-3">
