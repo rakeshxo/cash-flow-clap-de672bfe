@@ -21,6 +21,9 @@ import { toastError, withRetry } from "@/lib/errors";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
 import { DataState } from "@/components/DataState";
 import Seo from "@/components/Seo";
+import { HumanCheck } from "@/components/HumanCheck";
+import { KycPanel, KYC_COIN_THRESHOLD } from "@/components/KycPanel";
+import { runNetworkCheck } from "@/lib/deviceTrust";
 
 const MIN_WITHDRAW = 500;
 
