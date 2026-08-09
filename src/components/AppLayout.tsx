@@ -38,6 +38,9 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   const [open, setOpen] = useState(false);
 
   useIdleLogout();
+  useDeviceTrust();
+
+
 
 
   const items = isAdmin
