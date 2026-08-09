@@ -77,7 +77,13 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-soft font-sans">
+    <div className="min-h-dvh bg-gradient-soft font-sans">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-card focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        Skip to main content
+      </a>
       <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur">
         <div className="container mx-auto flex items-center justify-between gap-3 py-3">
           <div className="flex items-center gap-3">
@@ -85,12 +91,14 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
               className="rounded-lg p-2 hover:bg-secondary md:hidden"
               onClick={() => setOpen(true)}
               aria-label="Open menu"
+              aria-expanded={open}
+              aria-controls="mobile-nav"
             >
               <Menu className="h-5 w-5" />
             </button>
             <Link to="/dashboard" className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-hero shadow-glow">
-                <Coins className="h-5 w-5 text-primary-foreground" />
+                <Coins className="h-5 w-5 text-primary-foreground" aria-hidden />
               </div>
               <span className="font-display text-xl font-bold text-foreground">PollPay</span>
             </Link>
